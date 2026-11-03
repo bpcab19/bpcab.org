@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">BPCAB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg-dark: #121212; --bg-darker: #0a0a0a; --gold: #D4AF37; --gold-light: #F3E5AB; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        body { font-family: var(--font-body); background-color: var(--bg-dark); color: var(--text-white); line-height: 1.6; overflow-x: hidden; scroll-behavior: smooth; }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+        .navbar { position: fixed; top: 0; left: 0; width: 100%; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
+        .nav-logo { display: flex; align-items: center; gap: 15px; }
+        .nav-logo img { height: 55px; width: 55px; border-radius: 50%; border: 2px solid var(--gold); padding: 2px; object-fit: cover; background-color: var(--bg-darker); }
+        .nav-logo-text { font-family: var(--font-heading); font-size: 1.4rem; letter-spacing: 2px; color: var(--gold); font-weight: 700; }
+        .desktop-menu { display: flex; gap: 25px; }
+        .desktop-menu a { font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-white); transition: var(--transition); }
+        .desktop-menu a:hover { color: var(--gold); }
+        .menu-btn { display: none; background: transparent; border: none; color: var(--gold); font-size: 1.8rem; cursor: pointer; }
+        .mobile-menu { position: fixed; top: 0; right: -100%; width: 300px; height: 100vh; background-color: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-left: 1px solid rgba(212, 175, 55, 0.3); z-index: 2000; display: flex; flex-direction: column; padding: 100px 40px 40px; transition: var(--transition); overflow-y: auto; }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a { display: block; font-size: 1rem; font-weight: 500; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-white); text-transform: uppercase; }
+        .mobile-menu a:hover { color: var(--gold); padding-left: 10px; }
+        .close-btn { position: absolute; top: 25px; right: 25px; background: transparent; border: none; color: var(--gold); font-size: 2rem; cursor: pointer; }
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover; background-attachment: fixed; }
+        .hero-logo { height: 180px; width: 180px; border-radius: 50%; border: 4px solid var(--gold); margin-bottom: 30px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); background-color: var(--bg-darker); padding: 5px; animation: float 6s ease-in-out infinite; object-fit: cover; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .hero h1 { font-family: var(--font-heading); font-size: 4rem; color: var(--gold); letter-spacing: 4px; margin-bottom: 10px; }
+        .hero p { font-size: 1rem; letter-spacing: 3px; text-transform: uppercase; color: var(--text-gray); margin-bottom: 40px; }
+        .btn-premium { padding: 15px 40px; background: transparent; border: 2px solid var(--gold); color: var(--gold); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; z-index: 1; }
+        .btn-premium::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: var(--gold); transition: var(--transition); z-index: -1; }
+        .btn-premium:hover { color: var(--bg-dark); }
+        .btn-premium:hover::before { left: 0; }
+        .btn-small { padding: 10px 20px; font-size: 0.8rem; }
+        .section { padding: 100px 5%; }
+        .bg-darker { background-color: var(--bg-darker); }
+        .bg-dark { background-color: var(--bg-dark); }
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-header h2 { font-family: var(--font-heading); font-size: 2.5rem; color: var(--gold); margin-bottom: 15px; }
+        .section-header p { color: var(--text-gray); max-width: 700px; margin: 0 auto; }
+        .section-header::after { content: ''; display: block; width: 80px; height: 2px; background: var(--gold); margin: 20px auto 0; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(212, 175, 55, 0.1); border-radius: 10px; padding: 30px; text-align: center; transition: var(--transition); }
+        .card:hover { transform: translateY(-5px); border-color: var(--gold); }
+        .card i { font-size: 2.2rem; color: var(--gold); margin-bottom: 20px; }
+        .card h3 { font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 10px; }
+        .card p { color: var(--text-gray); font-size: 0.9rem; }
+        .profile-card { background: var(--bg-dark); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 10px; overflow: hidden; text-align: center; }
+        .profile-card img { width: 100%; height: 200px; object-fit: cover; filter: grayscale(100%); transition: var(--transition); }
+        .profile-card:hover img { filter: grayscale(0%); }
+        .profile-card .info { padding: 15px; }
+        .profile-card h4 { color: var(--gold); font-family: var(--font-heading); }
+        .profile-card span { display: block; font-size: 0.8rem; color: var(--text-gray); margin-top: 5px; }
+        .job-card { background: rgba(255,255,255,0.03); border-left: 4px solid var(--gold); padding: 20px; border-radius: 5px; text-align: left; }
+        .job-card h4 { margin-bottom: 5px; }
+        .job-card p { font-size: 0.85rem; margin-bottom: 5px; color: var(--text-gray); }
+        .job-card .tag { display: inline-block; background: rgba(212,175,55,0.2); color: var(--gold); padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; margin-top: 10px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-group label { font-size: 0.85rem; color: var(--text-gray); }
+        .form-group input, .form-group textarea, .form-group select { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 12px; color: var(--text-white); border-radius: 5px; font-family: var(--font-body); }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--gold); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .gallery-item { position: relative; height: 300px; border-radius: 8px; overflow: hidden; cursor: pointer; background:#000; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
+        .gallery-item:hover img { transform: scale(1.05); opacity:0.8; }
+        .gallery-caption { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); pointer-events: none; }
+        .gallery-caption h4 { color: var(--gold); font-family: var(--font-heading); }
+        .gallery-caption p { font-size: 0.8rem; color: #ccc; }
+        .lightbox { display: none; position: fixed; z-index: 3000; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); justify-content: center; align-items: center; flex-direction: column; }
+        .lightbox.active { display: flex; }
+        .lightbox img { max-width: 90%; max-height: 75vh; border: 4px solid var(--gold); border-radius: 5px; }
+        .lightbox-caption { margin-top: 20px; text-align: center; }
+        .lightbox-caption h3 { color: var(--gold); font-family: var(--font-heading); }
+        .lightbox-close { position: absolute; top: 30px; right: 40px; color: var(--gold); font-size: 3rem; cursor: pointer; }
+        footer { background-color: #050505; padding: 50px 5% 30px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.2); }
+        .footer-logo { font-family: var(--font-heading); font-size: 1.8rem; color: var(--gold); margin-bottom: 20px; letter-spacing: 3px; }
+        .footer-socials a { display: inline-flex; justify-content: center; align-items: center; width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--gold); margin: 0 10px; font-size: 1.2rem; transition: var(--transition); }
+        .footer-socials a:hover { background: var(--gold); color: var(--bg-dark); }
+        footer p { color: #666; font-size: 0.85rem; }
+        .whatsapp-btn { position: fixed; bottom: 30px; right: 30px; background-color: #25D366; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; z-index: 1000; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); transition: var(--transition); }
+        .whatsapp-btn:hover { transform: scale(1.1); }
+        @media (max-width: 900px) {
+            .desktop-menu { display: none; }
+            .menu-btn { display: block; }
+            .hero h1 { font-size: 2.5rem; }
+            .section-header h2 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="#home" class="nav-logo">
+            <img id="navLogo" src="https://ui-avatars.com/api/?name=BPCAB&background=121212&color=D4AF37&size=100&font-size=0.4&bold=true" alt="Logo">
+            <span class="nav-logo-text" id="navSiteName">BPCAB</span>
+        </a>
+        <div class="desktop-menu">
+            <a href="#about">About</a>
+            <a href="#directory">Directory</a>
+            <a href="#membership">Membership</a>
+            <a href="#jobs">Jobs</a>
+            <a href="#learning">Learning</a>
+            <a href="#community">Community</a>
+            <a href="#contact">Contact</a>
+        </div>
+        <button class="menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="close-btn" onclick="toggleMenu()"><i class="fa-solid fa-xmark"></i></button>
+        <a href="#about" onclick="toggleMenu()">About BPCAB</a>
+        <a href="#directory" onclick="toggleMenu()">Chef Directory</a>
+        <a href="#membership" onclick="toggleMenu()">Membership & ID</a>
+        <a href="#jobs" onclick="toggleMenu()">Job Board</a>
+        <a href="#learning" onclick="toggleMenu()">Learning Hub</a>
+        <a href="#community" onclick="toggleMenu()">Community</a>
+        <a href="#contact" onclick="toggleMenu()">Contact</a>
+    </div>
+
+    <section class="hero" id="home">
+        <img id="heroLogo" src="https://ui-avatars.com/api/?name=BPCAB&background=121212&color=D4AF37&size=300&font-size=0.4&bold=true" alt="Logo" class="hero-logo">
+        <h1 id="heroTitle">BPCAB</h1>
+        <p id="heroSubtitle">Bakery & Pastry Chefs Assembly of Bangladesh</p>
+        <a href="#directory" class="btn-premium">Explore Directory</a>
+    </section>
+
+    <section class="section bg-darker" id="about">
+        <div class="section-header">
+            <h2>About BPCAB</h2>
+            <p id="aboutText">Uniting the culinary professionals of Bangladesh...</p>
+        </div>
+        <div class="grid-container">
+            <div class="card"><i class="fa-solid fa-bullseye"></i><h3>Our Goal</h3><p>To create a unified platform for all bakery and pastry professionals.</p></div>
+            <div class="card"><i class="fa-solid fa-users"></i><h3>Executive Committee</h3><p>Led by visionary chefs dedicated to the culinary industry.</p></div>
+            <div class="card"><i class="fa-solid fa-quote-left"></i><h3>President's Message</h3><p>"Our mission is to bring Bangladeshi bakery arts to the world stage."</p></div>
+        </div>
+    </section>
+
+    <section class="section bg-dark" id="directory">
+        <div class="section-header"><h2>Chef Directory</h2><p>Connect with the best bakery and pastry professionals.</p></div>
+        <div class="grid-container" id="chefContainer"><div class="card"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading...</p></div></div>
+    </section>
+
+    <section class="section bg-darker" id="membership">
+        <div class="section-header"><h2>Membership & Digital ID</h2><p>Join BPCAB and get your digital ID card.</p></div>
+        <div class="grid-container">
+            <div class="card" style="text-align:left;">
+                <h3 style="margin-bottom:20px; text-align:center;">Apply for Membership</h3>
+                <div class="form-group"><label>Full Name</label><input type="text" id="memName" placeholder="Enter your name" onkeyup="updateID()"></div>
+                <div class="form-group"><label>Specialty</label><select id="memSpec" onchange="updateID()"><option>Fondant Cake</option><option>Bread & Pastry</option><option>Chocolate Art</option></select></div>
+                <div class="form-group"><label>Experience (Years)</label><input type="number" id="memExp" placeholder="e.g. 5"></div>
+                <button class="btn-premium btn-small" style="width:100%;" onclick="alert('Application submitted!')">Apply Now</button>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:20px;">Your Digital ID</h3>
+                <div style="width:320px; height:200px; background:linear-gradient(135deg,#1a1a1a,#0a0a0a); border:2px solid var(--gold); border-radius:15px; padding:20px; position:relative; margin:20px auto;">
+                    <div style="width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); background:#333; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gold); margin-bottom:10px;"><i class="fa-solid fa-user"></i></div>
+                    <h5 id="previewName" style="color:white;">Your Name</h5>
+                    <p id="previewSpec" style="color:var(--text-gray); font-size:0.75rem;">Specialty</p>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:20px;">Pay Membership Fee</h3>
+                <p style="margin-bottom:10px;">bKash: <strong style="color:var(--gold);" id="feeBkash">01712-345678</strong></p>
+                <p style="margin-bottom:20px;">Nagad: <strong style="color:var(--gold);" id="feeNagad">01712-345678</strong></p>
+                <button class="btn-premium btn-small" style="width:100%;" onclick="alert('Payment verification pending.')">Verify Payment</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="section bg-dark" id="jobs">
+        <div class="section-header"><h2>Job Board</h2><p>Find opportunities in Bangladesh and abroad.</p></div>
+        <div class="grid-container" id="jobContainer"><div class="card"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading...</p></div></div>
+    </section>
+
+    <section class="section bg-darker" id="learning">
+        <div class="section-header"><h2>Learning Hub</h2><p>Enhance your skills with our resources.</p></div>
+        <div class="grid-container">
+            <div class="card"><i class="fa-solid fa-book-open"></i><h3>Recipe Library</h3><p>Video tutorials on fondant and pastry.</p></div>
+            <div class="card"><i class="fa-solid fa-calendar-check"></i><h3>Training & Workshops</h3><p>Check the calendar for masterclasses.</p></div>
+            <div class="card"><i class="fa-solid fa-qrcode"></i><h3>Certificate Verification</h3><p>Verify BPCAB certificates via QR.</p></div>
+        </div>
+    </section>
+
+    <section class="section bg-dark" id="community">
+        <div class="section-header"><h2>Community & Gallery</h2><p>Vote for Cake of the Month and join discussions.</p></div>
+        <div class="gallery-grid">
+            <div class="gallery-item" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Cake">
+                <div class="gallery-caption"><h4>Cake of the Month</h4><p>Vote for this masterpiece!</p></div>
+            </div>
+            <div class="gallery-item" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Pastry">
+                <div class="gallery-caption"><h4>Artisan Croissants</h4><p>By Chef Sarah</p></div>
+            </div>
+            <div class="gallery-item" onclick="openLightbox(this)">
+                <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Bread">
+                <div class="gallery-caption"><h4>Sourdough Bread</h4><p>Traditional techniques</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section bg-darker" id="contact">
+        <div class="section-header"><h2>Contact Us</h2><p>Stay updated and reach out to us directly.</p></div>
+        <div class="grid-container">
+            <div class="card" style="text-align:left;">
+                <h3 style="margin-bottom:20px;">Contact Information</h3>
+                <p style="margin-bottom:10px;"><i class="fa-solid fa-location-dot" style="color:var(--gold); margin-right:10px;"></i> <span id="contactAddress">Dhaka, Bangladesh</span></p>
+                <p style="margin-bottom:10px;"><i class="fa-solid fa-envelope" style="color:var(--gold); margin-right:10px;"></i> <span id="contactEmail">info@bpcab.com</span></p>
+                <p><i class="fa-solid fa-phone" style="color:var(--gold); margin-right:10px;"></i> <span id="contactPhone">+880 1234 567890</span></p>
+            </div>
+            <div class="card" style="text-align:left;">
+                <h3 style="margin-bottom:20px;">Send a Message</h3>
+                <form id="telegramForm">
+                    <div class="form-group"><input type="text" id="name" placeholder="Your Name" required></div>
+                    <div class="form-group"><input type="email" id="email" placeholder="Your Email" required></div>
+                    <div class="form-group"><textarea rows="3" id="message" placeholder="Your Message" required></textarea></div>
+                    <button type="submit" class="btn-premium btn-small" style="width:100%;" id="submitBtn">Send via Telegram</button>
+                    <p id="formStatus" style="display:none; color:var(--gold); margin-top:10px; font-size:0.8rem;"></p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <img src="" id="lightbox-img" alt="Image">
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+
+    <footer>
+        <div class="footer-logo" id="footerSiteName">BPCAB</div>
+        <div class="footer-socials" id="footerSocials"></div>
+        <p>&copy; 2019 - 2024 <span id="footerFullName">Bakery & Pastry Chefs Assembly of Bangladesh</span>. All Rights Reserved.</p>
+    </footer>
+
+    <a id="whatsappBtn" href="#" class="whatsapp-btn" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+
+    <script>
+        const SUPABASE_URL = 'https://osekdaqefqaatddikjwv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_83DP8vxg6Utydu38nclHbA_1bCOh-Qf';
+        let TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
+        let TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID_HERE';
+
+        function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('active'); }
+        function updateID() {
+            document.getElementById('previewName').innerText = document.getElementById('memName').value || 'Your Name';
+            document.getElementById('previewSpec').innerText = document.getElementById('memSpec').value;
+        }
+        function openLightbox(el) {
+            document.getElementById('lightbox-img').src = el.querySelector('img').src;
+            document.getElementById('lightbox-caption').innerHTML = `<h3>${el.querySelector('.gallery-caption h4').innerText}</h3><p>${el.querySelector('.gallery-caption p').innerText}</p>`;
+            document.getElementById('lightbox').classList.add('active');
+        }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+
+        async function loadSiteSettings() {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?id=eq.1`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await res.json();
+                if (data.length === 0) return;
+                const s = data[0];
+                if (s.site_name) { document.getElementById('navSiteName').innerText = s.site_name; document.getElementById('footerSiteName').innerText = s.site_name; }
+                if (s.site_tagline) { document.getElementById('footerFullName').innerText = s.site_tagline; document.getElementById('pageTitle').innerText = `${s.site_name || 'BPCAB'} - ${s.site_tagline}`; }
+                if (s.logo_url) { document.getElementById('navLogo').src = s.logo_url; document.getElementById('heroLogo').src = s.logo_url; }
+                if (s.hero_title) document.getElementById('heroTitle').innerText = s.hero_title;
+                if (s.hero_subtitle) document.getElementById('heroSubtitle').innerText = s.hero_subtitle;
+                if (s.about_text) document.getElementById('aboutText').innerText = s.about_text;
+                if (s.contact_phone) document.getElementById('contactPhone').innerText = s.contact_phone;
+                if (s.contact_email) document.getElementById('contactEmail').innerText = s.contact_email;
+                if (s.contact_address) document.getElementById('contactAddress').innerText = s.contact_address;
+                if (s.whatsapp_number) document.getElementById('whatsappBtn').href = `https://wa.me/${s.whatsapp_number}`;
+                if (s.membership_fee_bkash) document.getElementById('feeBkash').innerText = s.membership_fee_bkash;
+                if (s.membership_fee_nagad) document.getElementById('feeNagad').innerText = s.membership_fee_nagad;
+                if (s.telegram_bot_token) TELEGRAM_BOT_TOKEN = s.telegram_bot_token;
+                if (s.telegram_chat_id) TELEGRAM_CHAT_ID = s.telegram_chat_id;
+                let socialsHtml = '';
+                if (s.facebook_url) socialsHtml += `<a href="${s.facebook_url}" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>`;
+                if (s.instagram_url) socialsHtml += `<a href="${s.instagram_url}" target="_blank"><i class="fa-brands fa-instagram"></i></a>`;
+                if (s.linkedin_url) socialsHtml += `<a href="${s.linkedin_url}" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>`;
+                if (s.youtube_url) socialsHtml += `<a href="${s.youtube_url}" target="_blank"><i class="fa-brands fa-youtube"></i></a>`;
+                if (socialsHtml) document.getElementById('footerSocials').innerHTML = socialsHtml;
+            } catch (e) { console.error('Settings load error', e); }
+        }
+
+        async function loadChefs() {
+            const container = document.getElementById('chefContainer');
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/chefs?select=*`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await res.json();
+                if (data.length === 0) { container.innerHTML = '<div class="card"><p>No chefs found.</p></div>'; return; }
+                container.innerHTML = data.map(c => `
+                    <div class="profile-card">
+                        <img src="${c.image_url || 'https://ui-avatars.com/api/?name=' + c.name + '&background=121212&color=D4AF37'}" alt="${c.name}">
+                        <div class="info">
+                            <h4>${c.name}</h4>
+                            <span style="color:var(--gold); font-weight:bold;">${c.specialty || 'Chef'}</span>
+                            <span><i class="fa-solid fa-briefcase"></i> ${c.workplace || 'Freelance'}</span>
+                            <span><i class="fa-solid fa-star"></i> ${c.experience || '0'} Years Exp.</span>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { container.innerHTML = '<div class="card"><p>Error loading chefs.</p></div>'; }
+        }
+
+        async function loadJobs() {
+            const container = document.getElementById('jobContainer');
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs?select=*`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await res.json();
+                if (data.length === 0) { container.innerHTML = '<div class="card"><p>No jobs found.</p></div>'; return; }
+                container.innerHTML = data.map(j => `
+                    <div class="job-card">
+                        <h4>${j.title}</h4>
+                        <p><i class="fa-solid fa-building"></i> ${j.company}</p>
+                        <p><i class="fa-solid fa-location-dot"></i> ${j.location}</p>
+                        <p><i class="fa-solid fa-money-bill"></i> ${j.salary || 'Negotiable'}</p>
+                        <span class="tag">${j.type || 'Full Time'}</span>
+                    </div>`).join('');
+            } catch (e) { container.innerHTML = '<div class="card"><p>Error loading jobs.</p></div>'; }
+        }
+
+        document.getElementById('telegramForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('formStatus');
+            btn.disabled = true; btn.innerText = 'Sending...';
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: `📬 *New Contact*\n👤 ${name}\n📧 ${email}\n💬 ${message}`, parse_mode: 'Markdown' })
+                });
+                if ((await res.json()).ok) { status.innerText = '✅ Sent successfully!'; status.style.color = '#4CAF50'; this.reset(); }
+                else throw new Error();
+            } catch (e) {
+                status.innerText = '❌ Failed. Configure Telegram in admin panel.'; status.style.color = '#f44336';
+            } finally {
+                status.style.display = 'block'; btn.disabled = false; btn.innerText = 'Send via Telegram';
+            }
+        });
+
+        loadSiteSettings();
+        loadChefs();
+        loadJobs();
+    </script>
+</body>
+</html>
