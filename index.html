@@ -6,6 +6,7 @@
     <title id="pageTitle">BPCAB</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #121212; --bg-darker: #0a0a0a; --gold: #D4AF37; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
@@ -59,6 +60,7 @@
         .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
         .form-group label { font-size: 0.85rem; color: var(--text-gray); }
         .form-group input, .form-group textarea, .form-group select { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 12px; color: var(--text-white); border-radius: 5px; font-family: var(--font-body); }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--gold); }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
         .gallery-item { position: relative; height: 300px; border-radius: 8px; overflow: hidden; cursor: pointer; background:#000; }
         .gallery-item img, .gallery-item video { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
@@ -76,7 +78,6 @@
         .learning-card iframe { width: 100%; height: 200px; border: none; }
         .learning-card .info { padding: 20px; }
         .learning-card h4 { color: var(--gold); font-family: var(--font-heading); margin-bottom: 5px; }
-        .learning-card .meta { font-size: 0.8rem; color: var(--text-gray); margin-bottom: 10px; }
         footer { background-color: #050505; padding: 50px 5% 30px; text-align: center; border-top: 1px solid rgba(212, 175, 55, 0.2); }
         .footer-logo { font-family: var(--font-heading); font-size: 1.8rem; color: var(--gold); margin-bottom: 20px; letter-spacing: 3px; }
         .footer-socials a { display: inline-flex; justify-content: center; align-items: center; width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--gold); margin: 0 10px; font-size: 1.2rem; }
@@ -118,7 +119,7 @@
     </section>
 
     <section class="section bg-darker" id="about">
-        <div class="section-header"><h2>About BPCAB</h2><p id="aboutText">Uniting the culinary professionals...</p></div>
+        <div class="section-header"><h2>About BPCAB</h2><p id="aboutText">Uniting the culinary professionals of Bangladesh.</p></div>
         <div class="grid-container">
             <div class="card"><i class="fa-solid fa-bullseye"></i><h3>Our Goal</h3><p>To create a unified platform for all bakery professionals.</p></div>
             <div class="card"><i class="fa-solid fa-users"></i><h3>Committee</h3><p>Led by visionary chefs dedicated to the industry.</p></div>
@@ -132,13 +133,13 @@
     </section>
 
     <section class="section bg-darker" id="membership">
-        <div class="section-header"><h2>Membership & Digital ID</h2><p>Join BPCAB and get your digital ID card.</p></div>
+        <div class="section-header"><h2>Membership & Digital ID</h2><p>Join BPCAB and get your official digital ID card after approval.</p></div>
         <div class="grid-container">
             <div class="card" style="text-align:left;">
                 <h3 style="margin-bottom:20px; text-align:center;">Apply for Membership</h3>
                 <form id="membershipForm">
                     <div class="form-group"><label>Full Name *</label><input type="text" id="memName" placeholder="Enter your name" required></div>
-                    <div class="form-group"><label>Specialty</label><select id="memSpec"><option>Fondant Cake</option><option>Bread & Pastry</option><option>Chocolate Art</option></select></div>
+                    <div class="form-group"><label>Specialty</label><select id="memSpec"><option>Fondant Cake</option><option>Bread & Pastry</option><option>Chocolate Art</option><option>Culinary Arts</option></select></div>
                     <div class="form-group"><label>Experience (Years)</label><input type="number" id="memExp" placeholder="e.g. 5"></div>
                     <div class="form-group"><label>Phone *</label><input type="text" id="memPhone" placeholder="01XXXXXXXXX" required></div>
                     <div class="form-group"><label>Email</label><input type="email" id="memEmail" placeholder="you@example.com"></div>
@@ -147,12 +148,32 @@
                 </form>
             </div>
             <div class="card">
-                <h3 style="margin-bottom:20px;">Your Digital ID</h3>
-                <div style="width:320px; height:200px; background:linear-gradient(135deg,#1a1a1a,#0a0a0a); border:2px solid var(--gold); border-radius:15px; padding:20px; position:relative; margin:20px auto;">
-                    <div style="width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); background:#333; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gold); margin-bottom:10px;"><i class="fa-solid fa-user"></i></div>
-                    <h5 id="previewName" style="color:white;">Your Name</h5>
-                    <p id="previewSpec" style="color:var(--text-gray); font-size:0.75rem;">Specialty</p>
+                <h3 style="margin-bottom:20px;">Check Your Digital ID</h3>
+                <p style="font-size:0.85rem; color:var(--text-gray); margin-bottom:15px;">Apply করার পর অ্যাডমিন Approve করলে আপনার ID দেখতে পাবেন।</p>
+                <div class="form-group">
+                    <label>Search By</label>
+                    <select id="searchType" style="margin-bottom:10px;">
+                        <option value="member_id">Member ID (সর্বোত্তম)</option>
+                        <option value="phone">Phone Number</option>
+                    </select>
                 </div>
+                <div class="form-group">
+                    <label>Enter Value</label>
+                    <input type="text" id="checkValue" placeholder="BPCAB-12345 অথবা 01XXXXXXXXX">
+                </div>
+                <button class="btn-premium btn-small" style="width:100%;" onclick="checkMyID()">Check My ID</button>
+                <div id="idResultBox" style="display:none; margin-top:20px;">
+                    <div id="idCardPreview" style="width:320px; height:200px; background:linear-gradient(135deg,#1a1a1a,#0a0a0a); border:2px solid var(--gold); border-radius:15px; padding:20px; position:relative; margin:20px auto; overflow:hidden;">
+                        <div style="position:absolute; top:10px; right:15px; font-family:var(--font-heading); color:var(--gold); font-size:1rem; font-weight:bold; letter-spacing:2px;">BPCAB</div>
+                        <div style="position:absolute; bottom:5px; right:15px; font-size:0.55rem; color:var(--gold); letter-spacing:1px;">Official Member ID</div>
+                        <div style="width:60px; height:60px; border-radius:50%; border:2px solid var(--gold); background:#333; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--gold); margin-bottom:10px;"><i class="fa-solid fa-user"></i></div>
+                        <h5 id="approvedName" style="color:white; font-size:1rem; margin-bottom:2px;">Name</h5>
+                        <p id="approvedSpec" style="color:var(--gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Specialty</p>
+                        <p id="approvedId" style="color:var(--text-gray); font-size:0.65rem; margin-top:8px;">ID: BPCAB-XXXX</p>
+                    </div>
+                    <button class="btn-premium btn-small" style="width:100%; margin-top:10px;" onclick="downloadApprovedID()"><i class="fa-solid fa-download"></i> Download ID Card</button>
+                </div>
+                <div id="idError" style="display:none; margin-top:15px; padding:12px; border-radius:8px; background:rgba(231,76,60,0.15); color:#e74c3c; text-align:center; font-size:0.85rem;"></div>
             </div>
             <div class="card">
                 <h3 style="margin-bottom:20px;">Pay Membership Fee</h3>
@@ -172,13 +193,12 @@
         <div class="section-header"><h2>Learning Hub</h2><p>Enhance your skills with our resources.</p></div>
         <div class="grid-container" id="recipeContainer"><div class="card"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading recipes...</p></div></div>
         <div class="grid-container" id="trainingContainer" style="margin-top:30px;"><div class="card"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading trainings...</p></div></div>
-        
         <div class="grid-container" style="margin-top:50px;">
             <div class="card">
-                <i class="fa-solid fa-qrcode"></i>
+                <i class="fa-solid fa-certificate"></i>
                 <h3>Certificate Verification</h3>
-                <p style="margin-bottom:15px;">Enter certificate ID to verify authenticity.</p>
-                <input type="text" id="certId" placeholder="e.g. BPCAB-2024-1234" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:5px;color:white;margin-bottom:10px;">
+                <p style="margin-bottom:15px;">Enter your Certificate Code to verify authenticity.</p>
+                <input type="text" id="certCode" placeholder="CERT-2024-XXXX" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.2);border-radius:5px;color:white;margin-bottom:10px;">
                 <button class="btn-premium btn-small" style="width:100%;" onclick="verifyCertificate()">Verify Certificate</button>
                 <div class="qr-result" id="qrResult"></div>
             </div>
@@ -321,17 +341,12 @@
                 const data = await res.json();
                 const recipes = data.filter(x => x.type === 'recipe');
                 const trainings = data.filter(x => x.type === 'training');
-                
                 if (recipes.length === 0) recipeContainer.innerHTML = '<div class="card"><p>No recipes available.</p></div>';
                 else recipeContainer.innerHTML = recipes.map(r => `
                     <div class="learning-card">
                         ${r.video_url ? `<iframe src="${r.video_url}" allowfullscreen></iframe>` : ''}
-                        <div class="info">
-                            <h4>${r.title}</h4>
-                            <p style="color:var(--text-gray);font-size:0.85rem;">${r.description || ''}</p>
-                        </div>
+                        <div class="info"><h4>${r.title}</h4><p style="color:var(--text-gray);font-size:0.85rem;">${r.description || ''}</p></div>
                     </div>`).join('');
-                
                 if (trainings.length === 0) trainingContainer.innerHTML = '<div class="card"><p>No trainings scheduled.</p></div>';
                 else trainingContainer.innerHTML = trainings.map(t => `
                     <div class="card" style="text-align:left;">
@@ -351,29 +366,26 @@
                 container.innerHTML = data.map(item => `
                     <div class="gallery-item" onclick="openLightbox(this)">
                         ${item.media_type === 'video' ? `<video src="${item.media_url}" muted></video>` : `<img src="${item.media_url}" alt="${item.title}">`}
-                        <div class="gallery-caption">
-                            <h4>${item.title}</h4>
-                            <p>${item.description || ''}</p>
-                        </div>
+                        <div class="gallery-caption"><h4>${item.title}</h4><p>${item.description || ''}</p></div>
                     </div>`).join('');
             } catch (e) { container.innerHTML = '<div class="card"><p>Error loading gallery.</p></div>'; }
         }
-
-        document.getElementById('memName').addEventListener('input', function() { document.getElementById('previewName').innerText = this.value || 'Your Name'; });
-        document.getElementById('memSpec').addEventListener('change', function() { document.getElementById('previewSpec').innerText = this.value; });
 
         document.getElementById('membershipForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('memBtn');
             const status = document.getElementById('memStatus');
             btn.disabled = true; btn.innerText = 'Submitting...';
+            
+            const generatedId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
             const data = {
                 name: document.getElementById('memName').value,
                 specialty: document.getElementById('memSpec').value,
                 experience: document.getElementById('memExp').value,
                 phone: document.getElementById('memPhone').value,
                 email: document.getElementById('memEmail').value,
-                status: 'pending'
+                status: 'pending',
+                member_id: generatedId
             };
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/membership_applications`, {
@@ -382,32 +394,76 @@
                     body: JSON.stringify(data)
                 });
                 if (res.ok) {
-                    status.innerText = '✅ Application submitted! Admin will contact you soon.';
+                    status.innerHTML = `✅ Application submitted!<br><strong style="color:var(--gold);font-size:1.1rem;">Your ID: ${generatedId}</strong><br><span style="font-size:0.8rem;">এই ID সংরক্ষণ করুন। Approve হলে এই ID দিয়ে ডিজিটাল কার্ড ডাউনলোড করতে পারবেন।</span>`;
                     status.style.color = '#2ecc71'; status.style.display = 'block';
                     this.reset();
-                    document.getElementById('previewName').innerText = 'Your Name';
-                    document.getElementById('previewSpec').innerText = 'Specialty';
                 } else throw new Error();
             } catch (err) {
                 status.innerText = '❌ Submission failed. Try again.'; status.style.color = '#e74c3c'; status.style.display = 'block';
             } finally { btn.disabled = false; btn.innerText = 'Apply Now'; }
         });
 
-        async function verifyCertificate() {
-            const certId = document.getElementById('certId').value.trim();
-            const result = document.getElementById('qrResult');
-            if (!certId) { result.className = 'qr-result error'; result.innerText = '❌ Please enter a certificate ID.'; return; }
-            
+        async function checkMyID() {
+            const searchType = document.getElementById('searchType').value;
+            const value = document.getElementById('checkValue').value.trim();
+            const resultBox = document.getElementById('idResultBox');
+            const errorBox = document.getElementById('idError');
+            resultBox.style.display = 'none';
+            errorBox.style.display = 'none';
+            if (!value) {
+                errorBox.innerText = '❌ অনুগ্রহ করে ID বা ফোন নম্বর দিন।';
+                errorBox.style.display = 'block';
+                return;
+            }
+            const query = searchType === 'member_id' 
+                ? `member_id=eq.${encodeURIComponent(value)}&status=eq.approved`
+                : `phone=eq.${encodeURIComponent(value)}&status=eq.approved`;
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/membership_applications?select=*`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/membership_applications?${query}&select=*`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
                 const data = await res.json();
-                const found = data.find(x => x.name && x.name.toLowerCase().includes(certId.toLowerCase()));
-                if (found) {
+                if (data.length === 0) {
+                    errorBox.innerText = '❌ কোনো Approved ID পাওয়া যায়নি। নিশ্চিত করুন অ্যাডমিন আপনার আবেদন Approve করেছেন।';
+                    errorBox.style.display = 'block';
+                    return;
+                }
+                const member = data[0];
+                document.getElementById('approvedName').innerText = member.name;
+                document.getElementById('approvedSpec').innerText = member.specialty || 'Member';
+                document.getElementById('approvedId').innerText = 'ID: ' + (member.member_id || 'BPCAB-' + member.id);
+                resultBox.style.display = 'block';
+            } catch (e) {
+                errorBox.innerText = '❌ Connection error. Try again.';
+                errorBox.style.display = 'block';
+            }
+        }
+
+        async function downloadApprovedID() {
+            const card = document.getElementById('idCardPreview');
+            try {
+                const canvas = await html2canvas(card, { backgroundColor: '#0a0a0a', scale: 2, useCORS: true });
+                const link = document.createElement('a');
+                link.download = 'BPCAB-Official-ID.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (e) { alert('Download failed.'); }
+        }
+
+        async function verifyCertificate() {
+            const code = document.getElementById('certCode').value.trim();
+            const result = document.getElementById('qrResult');
+            if (!code) { result.className = 'qr-result error'; result.innerText = '❌ Please enter a certificate code.'; return; }
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/certificates?certificate_code=eq.${encodeURIComponent(code)}&select=*`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const data = await res.json();
+                if (data.length > 0) {
+                    const c = data[0];
                     result.className = 'qr-result success';
-                    result.innerHTML = `✅ Verified! <br><strong>${found.name}</strong> - ${found.specialty || 'Member'}`;
+                    result.innerHTML = `✅ <strong>Verified!</strong><br><span style="font-size:1.1rem;color:var(--gold);">${c.member_name}</span><br>${c.course_name}<br><span style="font-size:0.75rem;">ID: ${c.member_id} | Date: ${c.issue_date || 'N/A'}</span>`;
                 } else {
                     result.className = 'qr-result error';
-                    result.innerText = '❌ Certificate not found. Please check the ID.';
+                    result.innerText = '❌ Certificate not found. Please check the code.';
                 }
             } catch (e) {
                 result.className = 'qr-result error';
