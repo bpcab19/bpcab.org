@@ -8,13 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --bg-dark: #121212; --bg-darker: #0a0a0a; --bg-card: #1a1a1a; --gold: #D4AF37; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --danger: #e74c3c; --success: #2ecc71; }
+        :root { --bg-dark: #121212; --bg-darker: #0a0a0a; --bg-card: #1a1a1a; --gold: #D4AF37; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; }
         body { font-family: var(--font-body); background-color: var(--bg-darker); color: var(--text-white); line-height: 1.6; }
         a { text-decoration: none; color: inherit; }
         .login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1920') center/cover; }
         .login-box { background: rgba(26,26,26,0.95); padding: 50px 40px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3); text-align: center; width: 100%; max-width: 400px; }
         .login-box h1 { font-family: var(--font-heading); color: var(--gold); margin-bottom: 10px; }
-        .login-box input { width: 100%; padding: 15px; margin-bottom: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); color: white; border-radius: 5px; font-family: var(--font-body); }
+        .login-box input { width: 100%; padding: 15px; margin: 20px 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); color: white; border-radius: 5px; font-family: var(--font-body); }
         .btn { padding: 12px 25px; background: var(--gold); color: var(--bg-dark); border: none; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-radius: 5px; font-family: var(--font-body); }
         .btn:hover { background: #b8962e; }
         .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 10px; display: none; }
@@ -33,6 +33,7 @@
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(212,175,55,0.2); }
         .page-header h1 { font-family: var(--font-heading); color: var(--gold); font-size: 1.8rem; }
         .add-btn { background: var(--gold); color: var(--bg-dark); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; font-family: var(--font-body); display: flex; align-items: center; gap: 8px; }
+        .add-btn:hover { background: #b8962e; }
         .view { display: none; }
         .view.active { display: block; }
         .table-container { background: var(--bg-card); border-radius: 8px; border: 1px solid rgba(212,175,55,0.1); overflow-x: auto; }
@@ -41,6 +42,8 @@
         td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; vertical-align: middle; }
         .action-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.8rem; }
         .action-btn.delete { border-color: var(--danger); color: var(--danger); }
+        .action-btn.approve { border-color: var(--success); color: var(--success); }
+        .action-btn.reject { border-color: var(--warning); color: var(--warning); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
         .modal.active { display: flex; }
         .modal-content { background: var(--bg-card); padding: 30px; border-radius: 10px; border: 1px solid var(--gold); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
@@ -57,12 +60,13 @@
         .settings-form h3:first-child { margin-top: 0; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .success-msg { color: var(--success); font-size: 0.85rem; display: none; margin-top: 15px; }
-        .upload-area { border: 2px dashed rgba(212,175,55,0.4); padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; margin-bottom: 15px; }
-        .preview-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-top: 10px; }
+        .preview-img { width: 100%; max-height: 150px; object-fit: cover; border-radius: 8px; margin-top: 10px; }
         .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
         .badge.recipe { background: rgba(212,175,55,0.2); color: var(--gold); }
         .badge.training { background: rgba(46,204,113,0.2); color: var(--success); }
-        .badge.pending { background: rgba(241,196,15,0.2); color: #f1c40f; }
+        .badge.pending { background: rgba(241,196,15,0.2); color: var(--warning); }
+        .badge.approved { background: rgba(46,204,113,0.2); color: var(--success); }
+        .badge.rejected { background: rgba(231,76,60,0.2); color: var(--danger); }
         @media (max-width: 768px) {
             .sidebar { width: 70px; }
             .sidebar-header h2, .sidebar-header p, .nav-item span, .logout-btn button span { display: none; }
@@ -311,7 +315,13 @@
                             <td>${item.specialty || '-'}</td>
                             <td>${item.phone || '-'}</td>
                             <td><span class="badge ${item.status}">${item.status}</span></td>
-                            <td><button class="action-btn delete" onclick="deleteItem('membership_applications', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+                            <td>
+                                ${item.status === 'pending' ? `
+                                    <button class="action-btn approve" onclick="updateAppStatus(${item.id}, 'approved')" title="Approve"><i class="fa-solid fa-check"></i></button>
+                                    <button class="action-btn reject" onclick="updateAppStatus(${item.id}, 'rejected')" title="Reject"><i class="fa-solid fa-xmark"></i></button>
+                                ` : ''}
+                                <button class="action-btn delete" onclick="deleteItem('membership_applications', ${item.id})"><i class="fa-solid fa-trash"></i></button>
+                            </td>
                         </tr>`).join('');
                 } else if (table === 'messages') {
                     tbody.innerHTML = data.map(item => `
@@ -323,6 +333,12 @@
                         </tr>`).join('');
                 }
             } catch (e) { tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px; color:var(--danger);">Error.</td></tr>`; }
+        }
+
+        async function updateAppStatus(id, status) {
+            const res = await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id}`, body: { status: status } });
+            if (res.ok) { loadData('membership_applications'); alert(`Application ${status}!`); }
+            else alert('Failed to update status.');
         }
 
         async function loadSiteSettings() {
@@ -407,7 +423,7 @@
                 const url = await uploadFile(file);
                 if (ctx === 'image') document.getElementById('image_url').value = url;
                 else document.getElementById('media_url').value = url;
-                document.getElementById('preview-container').innerHTML = `<img src="${url}" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:10px;">`;
+                document.getElementById('preview-container').innerHTML = `<img src="${url}" class="preview-img">`;
             } catch (e) { alert('Upload failed: ' + e.message); }
         }
 
@@ -425,9 +441,7 @@
             const table = tableMap[type];
             const data = Object.fromEntries(new FormData(form).entries());
             
-            if (type === 'learning') {
-                data.type = document.getElementById('learnType').value;
-            }
+            if (type === 'learning') data.type = document.getElementById('learnType').value;
             
             let res;
             if (isEdit) res = await apiFetch(table, { method: 'PATCH', query: `?id=eq.${currentItemId}`, body: data });
