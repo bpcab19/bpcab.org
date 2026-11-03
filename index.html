@@ -488,7 +488,7 @@
                 if ((await res.json()).ok) { status.innerText = '✅ Sent!'; status.style.color = '#4CAF50'; this.reset(); }
                 else throw new Error();
             } catch (e) { status.innerText = '❌ Failed.'; status.style.color = '#f44336'; }
-            finally { status.style.display = 'block'; btn.disabled = false; btn.innerText = 'Send via Telegram'; }
+            finally { status.style.display = 'block'; btn.disabled = false; btn.innerText = 'Send'; }
         });
 
         loadSiteSettings();
