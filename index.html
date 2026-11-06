@@ -671,7 +671,7 @@ const res = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
 method: 'POST',
 headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
 body: JSON.stringify({
-type: 'signup',
+type: 'email', // FIXED: 'email' used instead of 'signup'
 email: pendingOtpEmail,
 token: otp
 })
