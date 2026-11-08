@@ -207,7 +207,7 @@ footer p { color: #666; font-size: 0.85rem; }
 <div class="card" style="text-align:left;">
 <h3 style="margin-bottom:20px; text-align:center;">Apply for Membership</h3>
 <div id="loginRequiredNote" style="padding:15px; background:rgba(212,175,55,0.1); border:1px solid var(--gold); border-radius:8px; text-align:center; margin-bottom:20px;">
-<p style="color:var(--gold); font-size:0.85rem; margin-bottom:10px;">⚠️ Membership apply করতে প্রথমে Login করুন</p>
+<p style="color:var(--gold); font-size:0.85rem; margin-bottom:10px;">⚠️ Please login to apply for membership</p>
 <button class="btn-premium btn-small" onclick="openAuth()">Login / Sign Up</button>
 </div>
 <form id="membershipForm" style="display:none;">
@@ -229,7 +229,7 @@ footer p { color: #666; font-size: 0.85rem; }
 </div>
 <div class="card">
 <h3 style="margin-bottom:20px;">Check Your Digital ID</h3>
-<p style="font-size:0.85rem; color:var(--text-gray); margin-bottom:15px;">Apply করার পর অ্যাডমিন Approve করলে আপনার ID দেখতে পাবেন।</p>
+<p style="font-size:0.85rem; color:var(--text-gray); margin-bottom:15px;">After admin approval, you can view your digital ID here.</p>
 <div class="form-group">
 <label>Search By</label>
 <select id="searchType" style="margin-bottom:10px;">
@@ -239,7 +239,7 @@ footer p { color: #666; font-size: 0.85rem; }
 </div>
 <div class="form-group">
 <label>Enter Value</label>
-<input type="text" id="checkValue" placeholder="BPCAB-12345 অথবা 01XXXXXXXXX">
+<input type="text" id="checkValue" placeholder="BPCAB-12345 or 01XXXXXXXXX">
 </div>
 <button class="btn-premium btn-small" style="width:100%;" onclick="checkMyID()">Check My ID</button>
 <div id="idResultBox" style="display:none; margin-top:20px;">
@@ -263,13 +263,13 @@ footer p { color: #666; font-size: 0.85rem; }
 <h3 style="margin-bottom:20px;">Pay Membership Fee</h3>
 <p style="margin-bottom:10px;">bKash: <strong style="color:var(--gold);" id="feeBkash">01712-345678</strong></p>
 <p style="margin-bottom:20px;">Nagad: <strong style="color:var(--gold);" id="feeNagad">01712-345678</strong></p>
-<p style="font-size:0.8rem; color:var(--text-gray);">Application জমা দেওয়ার পর অ্যাডমিন approve করবে।</p>
+<p style="font-size:0.8rem; color:var(--text-gray);">Admin will approve your application after submission.</p>
 </div>
 </div>
 </section>
 
 <section class="section bg-dark" id="myProfile" style="display:none;">
-<div class="section-header"><h2>My Profile</h2><p>আপনার account তথ্য ও membership স্ট্যাটাস</p></div>
+<div class="section-header"><h2>My Profile</h2><p>Your account information and membership status</p></div>
 <div style="max-width:700px; margin:0 auto;">
 <div class="card" style="text-align:left;">
 <div class="profile-header">
@@ -381,7 +381,7 @@ footer p { color: #666; font-size: 0.85rem; }
 <!-- OTP VERIFICATION SCREEN -->
 <div class="otp-container" id="otpContainer">
 <h3 class="otp-title">Verify Your Email</h3>
-<p class="otp-subtitle">আমরা একটি ৬-সংখ্যার কোড পাঠিয়েছি:</p>
+<p class="otp-subtitle">We sent a 6-digit code to:</p>
 <span class="otp-email" id="otpEmailDisplay">you@example.com</span>
 <div class="otp-input-wrap">
 <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" data-index="0">
@@ -394,7 +394,7 @@ footer p { color: #666; font-size: 0.85rem; }
 <button class="btn-premium btn-small" style="width:100%;" id="verifyOtpBtn" onclick="submitOtp()">Verify Code</button>
 <div class="auth-status" id="otpStatus"></div>
 <p style="text-align:center; margin-top:15px; font-size:0.8rem; color:var(--text-gray);">
-কোড পাননি? <a href="#" onclick="backToSignup(); return false;" style="color:var(--gold); text-decoration:underline;">আবার সাইন আপ করুন</a>
+Didn't receive code? <a href="#" onclick="backToSignup(); return false;" style="color:var(--gold); text-decoration:underline;">Sign up again</a>
 </p>
 </div>
 
@@ -457,7 +457,6 @@ pendingOtpEmail = email;
 document.getElementById('otpEmailDisplay').innerText = email;
 document.getElementById('authTabsContainer').style.display = 'none';
 document.getElementById('otpContainer').classList.add('active');
-// Focus first digit
 setTimeout(() => {
 document.querySelectorAll('.otp-digit')[0].focus();
 }, 100);
@@ -638,7 +637,7 @@ if (!res.ok) throw new Error(data.error_description || data.msg || 'Signup faile
 // Move to OTP screen
 showOtpScreen(email);
 status.className = 'auth-status success';
-status.innerText = '✅ ৬-সংখ্যার কোড আপনার ইমেইলে পাঠানো হয়েছে।';
+status.innerText = '✅ A 6-digit code has been sent to your email.';
 status.style.display = 'block';
 
 } catch (err) {
@@ -658,7 +657,7 @@ const otp = getOtpValue();
 
 if (otp.length !== 6) {
 status.className = 'auth-status error';
-status.innerText = '❌ সম্পূর্ণ ৬-সংখ্যার কোড দিন।';
+status.innerText = '❌ Please enter the complete 6-digit code.';
 status.style.display = 'block';
 return;
 }
@@ -671,7 +670,7 @@ const res = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
 method: 'POST',
 headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
 body: JSON.stringify({
-type: 'email', // FIXED: 'email' used instead of 'signup'
+type: 'signup',
 email: pendingOtpEmail,
 token: otp
 })
@@ -692,7 +691,7 @@ const user = await fetchUserInfo(data.access_token);
 if (user) await onLoginSuccess(user, session);
 }
 status.className = 'auth-status success';
-status.innerText = '✅ ভেরিফিকেশন সফল! আপনি লগইন হয়েছেন।';
+status.innerText = '✅ Verification successful! You are now logged in.';
 status.style.display = 'block';
 setTimeout(() => {
 closeAuth();
@@ -701,7 +700,7 @@ resetOtpScreen();
 
 } catch (err) {
 status.className = 'auth-status error';
-status.innerText = '❌ ' + (err.message || 'কোড ভুল বা মেয়াদোত্তীর্ণ।');
+status.innerText = '❌ ' + (err.message || 'Invalid or expired code.');
 status.style.display = 'block';
 } finally {
 btn.disabled = false; btn.innerText = 'Verify Code';
@@ -709,7 +708,7 @@ btn.disabled = false; btn.innerText = 'Verify Code';
 }
 
 async function logout() {
-if (!confirm('Logout করতে চান?')) return;
+if (!confirm('Are you sure you want to logout?')) return;
 try {
 if (currentSession) {
 await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
@@ -810,7 +809,7 @@ console.error('loadMyMembership error:', e);
 
 function viewMyIDCard() {
 if (!currentMembership || currentMembership.status !== 'approved') {
-alert('আপনার Membership এখনো Approve হয়নি।');
+alert('Your membership has not been approved yet.');
 return;
 }
 document.getElementById('checkValue').value = currentMembership.member_id;
@@ -825,7 +824,7 @@ document.getElementById('memPhoto').addEventListener('change', function(e) {
 const file = e.target.files[0];
 if (!file) return;
 if (file.size > 5 * 1024 * 1024) {
-alert('ছবি ৫ MB এর কম হতে হবে।');
+alert('Image must be less than 5 MB.');
 this.value = '';
 return;
 }
@@ -853,7 +852,7 @@ if (photoFile) {
 try {
 const fileExt = photoFile.name.split('.').pop().toLowerCase();
 const fileName = `${generatedId}-${Date.now()}.${fileExt}`;
-status.innerText = '📤 ছবি আপলোড হচ্ছে...';
+status.innerText = '📤 Uploading photo...';
 status.style.color = 'var(--gold)';
 status.style.display = 'block';
 
@@ -891,14 +890,14 @@ headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'C
 body: JSON.stringify(data)
 });
 if (res.ok) {
-status.innerHTML = `✅ Application submitted!<br><strong style="color:var(--gold);font-size:1.1rem;">Your ID: ${generatedId}</strong><br><span style="font-size:0.8rem;">এই ID সংরক্ষণ করুন। Approve হলে Profile থেকে ID Card দেখতে পারবেন।</span>`;
+status.innerHTML = `✅ Application submitted!<br><strong style="color:var(--gold);font-size:1.1rem;">Your ID: ${generatedId}</strong><br><span style="font-size:0.8rem;">Save this ID. After approval, you can view your ID card from your profile.</span>`;
 status.style.color = '#2ecc71'; status.style.display = 'block';
 this.reset();
 document.getElementById('photoPreview').innerHTML = '<i class="fa-solid fa-camera"></i>';
 await loadMyMembership();
 } else throw new Error();
 } catch (err) {
-status.innerText = '❌ Submission failed. Try again.';
+status.innerText = '❌ Submission failed. Please try again.';
 status.style.color = '#e74c3c';
 status.style.display = 'block';
 } finally {
@@ -914,7 +913,7 @@ const errorBox = document.getElementById('idError');
 resultBox.style.display = 'none';
 errorBox.style.display = 'none';
 if (!value) {
-errorBox.innerText = '❌ অনুগ্রহ করে ID বা ফোন নম্বর দিন।';
+errorBox.innerText = '❌ Please enter your ID or phone number.';
 errorBox.style.display = 'block';
 return;
 }
@@ -927,7 +926,7 @@ headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
 });
 const data = await res.json();
 if (data.length === 0) {
-errorBox.innerText = '❌ কোনো Approved ID পাওয়া যায়নি।';
+errorBox.innerText = '❌ No approved ID found.';
 errorBox.style.display = 'block';
 return;
 }
@@ -944,7 +943,7 @@ photoEl.innerHTML = '<i class="fa-solid fa-user"></i>';
 }
 resultBox.style.display = 'block';
 } catch (e) {
-errorBox.innerText = '❌ Connection error. Try again.';
+errorBox.innerText = '❌ Connection error. Please try again.';
 errorBox.style.display = 'block';
 }
 }
