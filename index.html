@@ -109,7 +109,6 @@ footer p { color: #666; font-size: 0.85rem; }
 .id-card-id { color: var(--text-gray); font-size: 0.65rem; font-family: monospace; }
 .id-card-footer { position: absolute; bottom: 8px; right: 15px; font-size: 0.55rem; color: var(--gold); letter-spacing: 1px; }
 
-/* AUTH MODAL */
 .auth-modal { display: none; position: fixed; z-index: 4000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 .auth-modal.active { display: flex; }
 .auth-box { background: var(--bg-dark); border: 1px solid var(--gold); border-radius: 15px; padding: 35px 30px; width: 100%; max-width: 600px; position: relative; animation: slideUp 0.4s ease; max-height: 90vh; overflow-y: auto;}
@@ -205,13 +204,18 @@ footer p { color: #666; font-size: 0.85rem; }
 <div class="form-group"><label>Full Name *</label><input type="text" id="memName" placeholder="Enter your name" required></div>
 <div class="form-group">
 <label>Specialty</label>
-<select id="memSpec" required>
+<select id="memSpec" required onchange="updateFeeDisplay()">
 <option value="" disabled selected>Loading specialties...</option>
 </select>
 </div>
 <div class="form-group"><label>Experience (Years)</label><input type="number" id="memExp" placeholder="e.g. 5"></div>
 <div class="form-group"><label>Phone *</label><input type="text" id="memPhone" placeholder="01XXXXXXXXX" required></div>
 <div class="form-group"><label>Email</label><input type="email" id="memEmail" placeholder="you@example.com"></div>
+
+<!-- Transaction ID Field -->
+<div class="form-group"><label>Transaction ID (bKash/Nagad) *</label><input type="text" id="memTrxId" placeholder="Enter your Transaction ID" required></div>
+<p style="color:var(--gold); font-size:0.85rem; margin-bottom:15px; text-align:center;">Total Fee: <strong id="membershipFeeDisplay">1000</strong> BDT</p>
+
 <button type="submit" class="btn-premium btn-small" style="width:100%;" id="memBtn">Apply Now</button>
 <p id="memStatus" style="display:none; margin-top:10px; font-size:0.85rem;"></p>
 </form>
@@ -261,6 +265,14 @@ footer p { color: #666; font-size: 0.85rem; }
 <p style="margin-bottom:8px; font-size:0.9rem;"><strong style="color:var(--gold);">Experience:</strong> <span id="profileExp">-</span></p>
 <p style="margin-bottom:15px; font-size:0.9rem;"><strong style="color:var(--gold);">Phone:</strong> <span id="profilePhone">-</span></p>
 <button class="btn-premium btn-small" onclick="viewMyIDCard()" style="width:100%; margin-bottom:10px;"><i class="fa-solid fa-id-card"></i> View My ID Card</button>
+
+<!-- Photo Change Section -->
+<div style="border-top:1px solid rgba(212,175,55,0.15); padding-top:20px; margin-top:20px;">
+<h4 style="color:var(--gold); font-family:var(--font-heading); margin-bottom:10px;">Change Profile Photo</h4>
+<input type="file" id="newPhotoInput" accept="image/*" style="display:none;" onchange="uploadNewPhoto(this)">
+<button class="btn-premium btn-small" onclick="document.getElementById('newPhotoInput').click()" style="width:100%;" id="changePhotoBtn"><i class="fa-solid fa-camera"></i> Upload New Photo</button>
+<p id="photoChangeStatus" style="display:none; margin-top:10px; font-size:0.85rem; text-align:center;"></p>
+</div>
 </div>
 <div style="border-top:1px solid rgba(212,175,55,0.15); padding-top:20px; margin-top:20px;"><button class="btn-premium btn-small btn-danger" onclick="logout()" style="width:100%;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button></div>
 </div>
@@ -321,7 +333,6 @@ footer p { color: #666; font-size: 0.85rem; }
 <div id="lightbox-caption" id="lightbox-caption"></div>
 </div>
 
-<!-- AUTH MODAL (UPDATED FOR FULL REGISTRATION) -->
 <div class="auth-modal" id="authModal">
 <div class="auth-box">
 <button class="auth-close" onclick="closeAuth()">&times;</button>
@@ -367,7 +378,6 @@ footer p { color: #666; font-size: 0.85rem; }
 <div id="regStatus" class="auth-status"></div>
 </form>
 
-<!-- LOGIN FORM (HIDDEN BY DEFAULT, USED AFTER APPROVAL) -->
 <form id="loginForm" style="display: none; margin-top:20px; border-top:1px solid rgba(212,175,55,0.2); padding-top:20px;">
 <h3 class="auth-title" style="font-size:1.2rem;">Login to your account</h3>
 <div class="form-group"><label>Email *</label><input type="email" id="loginEmail" required></div>
@@ -400,6 +410,10 @@ let TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID';
 let currentUser = null;
 let currentSession = null;
 let currentMembership = null;
+let currentSpecialties = [];
+const MAX_PHOTO_CHANGES = 10;
+const PHOTO_COOLDOWN_DAYS = 7;
+const PHOTO_COOLDOWN_MS = PHOTO_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('active'); }
 
@@ -445,26 +459,38 @@ toggleText.innerText = 'New here? Register instead.';
 }
 }
 
-// Load Dynamic Specialties Dropdown
+// Update fee display when specialty changes
+function updateFeeDisplay() {
+const selectedSpec = document.getElementById('memSpec').value;
+const spec = currentSpecialties.find(s => s.name === selectedSpec);
+if (spec) {
+document.getElementById('membershipFeeDisplay').innerText = spec.fee || '1000';
+} else {
+document.getElementById('membershipFeeDisplay').innerText = '1000';
+}
+}
+
 async function loadSpecialtiesDropdown() {
 try {
-const res = await fetch(`${SUPABASE_URL}/rest/v1/specialties?select=*&order=id.asc`, { 
+const res = await fetch(`${SUPABASE_URL}/rest/v1/specialties?select=*&is_active=eq.true&order=id.asc`, { 
 headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } 
 });
 const data = await res.json();
+currentSpecialties = data || [];
 const select = document.getElementById('memSpec');
 if (!data || data.length === 0) {
 select.innerHTML = '<option value="Other">Other</option>';
 return;
 }
-select.innerHTML = data.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+select.innerHTML = data.map(s => `<option value="${s.name}">${s.name} (${s.fee || 1000} BDT)</option>`).join('');
+updateFeeDisplay();
 } catch (e) {
 console.error('Error loading specialties:', e);
 document.getElementById('memSpec').innerHTML = '<option value="Other">Other</option>';
 }
 }
 
-// REGISTRATION SUBMIT (Creates Pending Application)
+// Registration Submit
 document.getElementById('registrationForm').addEventListener('submit', async function(e) {
 e.preventDefault();
 const btn = document.getElementById('regSubmitBtn');
@@ -473,7 +499,6 @@ btn.disabled = true; btn.innerText = 'Submitting...';
 status.className = 'auth-status'; status.style.display = 'none';
 
 try {
-// 1. Upload ID Front
 const frontFile = document.getElementById('regIdFront').files[0];
 const frontExt = frontFile.name.split('.').pop();
 const frontName = `front_${Date.now()}.${frontExt}`;
@@ -483,7 +508,6 @@ method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SU
 if (!frontRes.ok) throw new Error('ID Front upload failed');
 const frontUrl = `${SUPABASE_URL}/storage/v1/object/public/member-documents/${frontName}`;
 
-// 2. Upload ID Back
 const backFile = document.getElementById('regIdBack').files[0];
 const backExt = backFile.name.split('.').pop();
 const backName = `back_${Date.now()}.${backExt}`;
@@ -493,7 +517,8 @@ method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SU
 if (!backRes.ok) throw new Error('ID Back upload failed');
 const backUrl = `${SUPABASE_URL}/storage/v1/object/public/member-documents/${backName}`;
 
-// 3. Save Data to Database
+const generatedId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
+
 const data = {
 name: document.getElementById('regName').value,
 dob: document.getElementById('regDob').value,
@@ -506,7 +531,8 @@ reason: document.getElementById('regReason').value,
 email: document.getElementById('regEmail').value,
 username: document.getElementById('regUsername').value,
 temp_password: document.getElementById('regPassword').value,
-status: 'pending'
+status: 'pending',
+member_id: generatedId
 };
 
 const res = await fetch(`${SUPABASE_URL}/rest/v1/membership_applications`, {
@@ -518,7 +544,7 @@ body: JSON.stringify(data)
 if (!res.ok) throw new Error("Failed to save application.");
 
 status.className = 'auth-status success';
-status.innerHTML = '✅ Application submitted!<br>Our representative will contact you within 24-48 hours.';
+status.innerHTML = `✅ Application submitted!<br><strong style="color:var(--gold);">Your User ID: ${generatedId}</strong><br>Save this ID. Our representative will contact you within 24-48 hours.`;
 status.style.display = 'block';
 this.reset();
 
@@ -531,7 +557,7 @@ btn.disabled = false; btn.innerText = 'Submit Application';
 }
 });
 
-// LOGIN SUBMIT (For Approved Users Only)
+// Login Submit
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
 e.preventDefault();
 const btn = document.getElementById('loginBtn');
@@ -592,6 +618,9 @@ document.getElementById('profileMemberId').innerText = currentMembership.member_
 document.getElementById('profileSpec').innerText = currentMembership.specialty || '-';
 document.getElementById('profileExp').innerText = (currentMembership.experience || '0') + ' Years';
 document.getElementById('profilePhone').innerText = currentMembership.phone || '-';
+if (currentMembership.photo_url) {
+document.getElementById('profileAvatar').innerHTML = `<img src="${currentMembership.photo_url}" alt="${currentMembership.name}">`;
+}
 } else {
 statusBadge.className = 'status-badge pending'; statusBadge.innerText = 'No Membership';
 document.getElementById('profileMembershipInfo').style.display = 'none';
@@ -611,9 +640,87 @@ document.getElementById('membershipForm').style.display = 'none';
 document.getElementById('myProfile').style.display = 'none';
 document.getElementById('membershipForm').reset();
 document.getElementById('photoPreview').innerHTML = '<i class="fa-solid fa-camera"></i>';
+document.getElementById('profileAvatar').innerHTML = '<i class="fa-solid fa-user"></i>';
 }
 
-// Check session on load
+// ==================== PHOTO CHANGE WITH LIMIT ====================
+async function uploadNewPhoto(input) {
+const file = input.files[0];
+if (!file) return;
+const statusEl = document.getElementById('photoChangeStatus');
+const btn = document.getElementById('changePhotoBtn');
+statusEl.style.display = 'none';
+
+if (!currentMembership) { statusEl.style.display = 'block'; statusEl.style.color = 'red'; statusEl.innerText = '❌ No membership found.'; return; }
+
+// Check if limit reached
+const changeCount = currentMembership.photo_change_count || 0;
+if (changeCount >= MAX_PHOTO_CHANGES) {
+statusEl.style.display = 'block';
+statusEl.style.color = '#e74c3c';
+statusEl.innerHTML = '❌ You have reached the maximum limit (10 times). Profile photo cannot be changed anymore. Please contact admin via email for assistance.';
+input.value = '';
+return;
+}
+
+// Check cooldown (7 days)
+if (currentMembership.last_photo_change) {
+const lastChange = new Date(currentMembership.last_photo_change).getTime();
+const now = Date.now();
+const diff = now - lastChange;
+if (diff < PHOTO_COOLDOWN_MS) {
+const daysLeft = Math.ceil((PHOTO_COOLDOWN_MS - diff) / (24*60*60*1000));
+statusEl.style.display = 'block';
+statusEl.style.color = '#f1c40f';
+statusEl.innerText = `⏳ You can change your photo after ${daysLeft} day(s).`;
+input.value = '';
+return;
+}
+}
+
+btn.disabled = true; btn.innerText = 'Uploading...';
+try {
+const ext = file.name.split('.').pop();
+const fileName = `profile_${currentUser.id}_${Date.now()}.${ext}`;
+const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/member-photos/${fileName}`, {
+method: 'POST',
+headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type, 'x-upsert': 'true' },
+body: file
+});
+if (!uploadRes.ok) throw new Error('Upload failed');
+const photoUrl = `${SUPABASE_URL}/storage/v1/object/public/member-photos/${fileName}`;
+
+const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/membership_applications?id=eq.${currentMembership.id}`, {
+method: 'PATCH',
+headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+body: JSON.stringify({
+photo_url: photoUrl,
+photo_change_count: changeCount + 1,
+last_photo_change: new Date().toISOString()
+})
+});
+if (!updateRes.ok) throw new Error('Update failed');
+
+// Update local data
+currentMembership.photo_url = photoUrl;
+currentMembership.photo_change_count = changeCount + 1;
+currentMembership.last_photo_change = new Date().toISOString();
+
+document.getElementById('profileAvatar').innerHTML = `<img src="${photoUrl}" alt="Photo">`;
+statusEl.style.display = 'block';
+statusEl.style.color = '#2ecc71';
+statusEl.innerText = `✅ Photo changed successfully! You can change again after 7 days.`;
+} catch (err) {
+statusEl.style.display = 'block';
+statusEl.style.color = '#e74c3c';
+statusEl.innerText = '❌ Error: ' + err.message;
+} finally {
+btn.disabled = false; btn.innerText = 'Upload New Photo';
+input.value = '';
+}
+}
+
+// Initial load
 (async function init() {
 const s = localStorage.getItem('bpcab_session');
 if (s) {
@@ -729,7 +836,6 @@ ${item.media_type === 'video' ? `<video src="${item.media_url}" muted></video>` 
 } catch (e) { container.innerHTML = '<div class="card"><p>Error loading gallery.</p></div>'; }
 }
 
-// Certificate check remains same
 async function checkMyID() {
 const searchType = document.getElementById('searchType').value;
 const value = document.getElementById('checkValue').value.trim();
@@ -765,6 +871,7 @@ link.click();
 } catch (e) { alert('Download failed.'); }
 }
 
+// Membership Form Submit (after login)
 document.getElementById('membershipForm').addEventListener('submit', async function(e) {
 e.preventDefault();
 if (!currentUser) { openAuth(); return; }
@@ -772,8 +879,8 @@ const btn = document.getElementById('memBtn');
 const status = document.getElementById('memStatus');
 btn.disabled = true; btn.innerText = 'Submitting...';
 status.style.display = 'none';
-const generatedId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
-let photoUrl = '';
+const generatedId = currentMembership?.member_id || 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
+let photoUrl = currentMembership?.photo_url || '';
 const photoFile = document.getElementById('memPhoto').files[0];
 if (photoFile) {
 try {
@@ -784,7 +891,24 @@ const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/member-photos/$
 if (uploadRes.ok) photoUrl = `${SUPABASE_URL}/storage/v1/object/public/member-photos/${fileName}`;
 } catch (err) {}
 }
-const data = { name: document.getElementById('memName').value, specialty: document.getElementById('memSpec').value, experience: document.getElementById('memExp').value, phone: document.getElementById('memPhone').value, email: document.getElementById('memEmail').value, status: 'pending', member_id: generatedId, photo_url: photoUrl, user_id: currentUser.id };
+
+const selectedSpec = document.getElementById('memSpec').value;
+const spec = currentSpecialties.find(s => s.name === selectedSpec);
+
+const data = {
+name: document.getElementById('memName').value,
+specialty: selectedSpec,
+experience: document.getElementById('memExp').value,
+phone: document.getElementById('memPhone').value,
+email: document.getElementById('memEmail').value,
+transaction_id: document.getElementById('memTrxId').value,
+membership_fee_paid: spec ? spec.fee : 1000,
+status: 'pending',
+member_id: generatedId,
+photo_url: photoUrl,
+user_id: currentUser.id
+};
+
 try {
 const res = await fetch(`${SUPABASE_URL}/rest/v1/membership_applications`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
 if (res.ok) {
