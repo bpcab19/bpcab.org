@@ -87,7 +87,11 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .filter-bar input { flex: 1; min-width: 200px; padding: 10px 15px; background: var(--bg-card); border: 1px solid rgba(212,175,55,0.2); border-radius: 5px; color: white; font-family: var(--font-body); }
 
-.mobile-toggle { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: var(--bg-dark); width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 1.5rem; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; align-items: center; justify-content: center; }
+/* Mobile Sidebar Toggle (Hamburger) */
+.mobile-toggle { display: none; position: fixed; bottom: 20px; left: 20px; background: var(--gold); color: var(--bg-dark); width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 1.5rem; z-index: 1001; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; align-items: center; justify-content: center; }
+
+/* Mobile Logout Button (Always Visible Top Right) */
+.mobile-logout { display: none; position: fixed; top: 15px; right: 15px; background: var(--danger); color: white; width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; font-size: 1.2rem; z-index: 1001; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; align-items: center; justify-content: center; }
 
 @media (max-width: 768px) {
 .dashboard { flex-direction: column; }
@@ -99,6 +103,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 .add-btn { padding: 8px 15px; font-size: 0.8rem; }
 .grid-2 { grid-template-columns: 1fr; }
 .mobile-toggle { display: flex; }
+.mobile-logout { display: flex; }
 table { min-width: 500px; }
 th, td { padding: 10px 15px; font-size: 0.8rem; }
 }
@@ -303,7 +308,11 @@ th, td { padding: 10px 15px; font-size: 0.8rem; }
 </div>
 </div>
 
-<button class="mobile-toggle" onclick="toggleSidebar()" id="mobileToggleBtn" style="display:none;"><i class="fa-solid fa-bars"></i></button>
+<!-- Mobile Sidebar Toggle Button (bottom left) -->
+<button class="mobile-toggle" onclick="toggleSidebar()" id="mobileToggleBtn"><i class="fa-solid fa-bars"></i></button>
+
+<!-- Mobile Logout Button (top right, always visible) -->
+<button class="mobile-logout" onclick="logout()" id="mobileLogoutBtn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
 
 <div class="modal" id="dataModal">
 <div class="modal-content">
@@ -331,7 +340,7 @@ let currentItemId = null;
 let allUsers = [];
 let allApps = [];
 
-// ============ AUTHENTICATION GUARD ============
+// ============ AUTHENTICATION ============
 function isAdminLoggedIn() {
     return sessionStorage.getItem('bpcab_admin_session') === 'active';
 }
@@ -353,9 +362,8 @@ function login() {
         sessionStorage.setItem('bpcab_admin_session', 'active');
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'flex';
-        if (window.innerWidth <= 768) {
-            document.getElementById('mobileToggleBtn').style.display = 'flex';
-        }
+        document.getElementById('mobileToggleBtn').style.display = 'flex';
+        document.getElementById('mobileLogoutBtn').style.display = 'flex';
         loadOverview();
         loadSiteSettings();
     } else {
@@ -365,11 +373,10 @@ function login() {
 
 function logout() {
     if (!confirm('Are you sure you want to logout?')) return;
-    // Clear session flag
     sessionStorage.removeItem('bpcab_admin_session');
-    // Hide dashboard, show login
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('mobileToggleBtn').style.display = 'none';
+    document.getElementById('mobileLogoutBtn').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('adminPassword').value = '';
     document.getElementById('loginError').style.display = 'none';
@@ -909,12 +916,12 @@ async function changePassword() {
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('mobileToggleBtn').style.display = 'none';
+        document.getElementById('mobileLogoutBtn').style.display = 'none';
     } else {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'flex';
-        if (window.innerWidth <= 768) {
-            document.getElementById('mobileToggleBtn').style.display = 'flex';
-        }
+        document.getElementById('mobileToggleBtn').style.display = 'flex';
+        document.getElementById('mobileLogoutBtn').style.display = 'flex';
         loadOverview();
         loadSiteSettings();
     }
