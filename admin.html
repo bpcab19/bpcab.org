@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:root { --bg-dark: #121212; --bg-darker: #0a0a0a; --bg-card: #1a1a1a; --gold: #D4AF37; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; --info: #3498db; --purple: #9b59b6; }
+:root { --bg-dark: #121212; --bg-darker: #0a0a0a; --bg-card: #1a1a1a; --gold: #D4AF37; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; --purple: #9b59b6; }
 body { font-family: var(--font-body); background-color: var(--bg-darker); color: var(--text-white); line-height: 1.6; }
 a { text-decoration: none; color: inherit; }
 .login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1920') center/cover; }
@@ -45,7 +45,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 .action-btn.approve { border-color: var(--success); color: var(--success); }
 .action-btn.reject { border-color: var(--warning); color: var(--warning); }
 .action-btn.quarantine { border-color: var(--purple); color: var(--purple); }
-.action-btn.view-photo { border-color: var(--info); color: var(--info); }
+.action-btn.view-photo { border-color: #3498db; color: #3498db; }
 .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
 .modal.active { display: flex; }
 .modal-content { background: var(--bg-card); padding: 30px; border-radius: 10px; border: 1px solid var(--gold); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
@@ -66,8 +66,8 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
 .badge.recipe { background: rgba(212,175,55,0.2); color: var(--gold); }
 .badge.training { background: rgba(46,204,113,0.2); color: var(--success); }
-.badge.image { background: rgba(52,152,219,0.2); color: var(--info); }
-.badge.video { background: rgba(155,89,182,0.2); color: var(--purple); }
+.badge.image { background: rgba(52,152,219,0.2); color: #3498db; }
+.badge.video { background: rgba(155,89,182,0.2); color: #9b59b6; }
 .badge.pending { background: rgba(241,196,15,0.2); color: var(--warning); }
 .badge.approved { background: rgba(46,204,113,0.2); color: var(--success); }
 .badge.rejected { background: rgba(231,76,60,0.2); color: var(--danger); }
@@ -125,6 +125,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 
 <div class="main-content">
+<!-- Overview -->
 <div class="view active" id="view-overview">
 <div class="page-header"><h1>Dashboard Overview</h1></div>
 <div class="stats-grid">
@@ -137,6 +138,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Users -->
 <div class="view" id="view-users">
 <div class="page-header"><h1>Registered Users</h1></div>
 <div class="filter-bar">
@@ -150,6 +152,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Applications -->
 <div class="view" id="view-applications">
 <div class="page-header"><h1>Membership Applications</h1></div>
 <div class="filter-bar">
@@ -163,6 +166,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Settings -->
 <div class="view" id="view-settings">
 <div class="page-header"><h1>Website Settings</h1><button class="add-btn" onclick="saveSiteSettings()"><i class="fa-solid fa-save"></i> Save</button></div>
 <div class="settings-form">
@@ -209,6 +213,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Chefs -->
 <div class="view" id="view-chefs">
 <div class="page-header"><h1>Chef Directory</h1><button class="add-btn" onclick="openModal('chef')"><i class="fa-solid fa-plus"></i> Add Chef</button></div>
 <div class="table-container">
@@ -216,6 +221,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Jobs -->
 <div class="view" id="view-jobs">
 <div class="page-header"><h1>Job Board</h1><button class="add-btn" onclick="openModal('job')"><i class="fa-solid fa-plus"></i> Post Job</button></div>
 <div class="table-container">
@@ -223,6 +229,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Gallery -->
 <div class="view" id="view-gallery">
 <div class="page-header"><h1>Gallery</h1><button class="add-btn" onclick="openModal('gallery')"><i class="fa-solid fa-plus"></i> Upload</button></div>
 <div class="table-container">
@@ -230,6 +237,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Learning -->
 <div class="view" id="view-learning">
 <div class="page-header"><h1>Learning Hub</h1><button class="add-btn" onclick="openModal('learning')"><i class="fa-solid fa-plus"></i> Add Content</button></div>
 <div class="table-container">
@@ -237,6 +245,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Certificates -->
 <div class="view" id="view-certificates">
 <div class="page-header"><h1>Certificates</h1><button class="add-btn" onclick="openModal('certificate')"><i class="fa-solid fa-plus"></i> Issue Certificate</button></div>
 <div class="table-container">
@@ -244,6 +253,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Messages -->
 <div class="view" id="view-messages">
 <div class="page-header"><h1>Messages</h1></div>
 <div class="table-container">
@@ -251,6 +261,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<!-- Password -->
 <div class="view" id="view-password">
 <div class="page-header"><h1>Change Password</h1></div>
 <div class="settings-form" style="max-width:500px;">
@@ -441,7 +452,7 @@ ${item.id_back_url ? `<button class="action-btn view-photo" onclick="viewPhoto('
 ${item.status === 'pending' ? `
 <button class="action-btn approve" onclick="updateAppStatus(${item.id}, 'approved')" title="Approve"><i class="fa-solid fa-check"></i></button>
 <button class="action-btn quarantine" onclick="updateAppStatus(${item.id}, 'quarantine')" title="Quarantine (Suspend)"><i class="fa-solid fa-user-lock"></i></button>
-<button class="action-btn reject" onclick="updateAppStatus(${item.id}, 'rejected')" title="Reject (Delete)"><i class="fa-solid fa-xmark"></i></button>
+<button class="action-btn reject" onclick="updateAppStatus(${item.id}, 'rejected')" title="Reject & Delete"><i class="fa-solid fa-xmark"></i></button>
 ` : ''}
 <button class="action-btn delete" onclick="deleteItem('membership_applications', ${item.id})"><i class="fa-solid fa-trash"></i></button>
 </td>
@@ -490,7 +501,7 @@ alert('User creation failed: ' + (err.msg || 'Email might already exist.'));
 return;
 }
 
-// 2. ডেটাবেসে স্ট্যাটাস আপডেট এবং মেম্বার আইডি দেওয়া
+// 2. ডেটাবেসে স্ট্যাটাস আপডেট এবং মেম্বার আইডি দেওয়া
 const memberId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
 await apiFetch('membership_applications', { 
 method: 'PATCH', 
@@ -505,7 +516,7 @@ await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id
 alert(`🔒 User ${app.name} has been quarantined.`);
 } else {
 if (!confirm(`Reject and DELETE ${app.name}'s application permanently?`)) return;
-// অ্যাপ্লিকেশন ডিলিট করে দেওয়া হচ্ছে
+// অ্যাপ্লিকেশন ডিলিট করে দেওয়া হচ্ছে
 await apiFetch('membership_applications', { method: 'DELETE', query: `?id=eq.${id}` });
 alert(`❌ Application for ${app.name} has been permanently removed.`);
 }
