@@ -155,7 +155,7 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 <div class="table-container">
 <table>
-<thead><tr><th>Photo</th><th>Member ID</th><th>Name</th><th>Specialty</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+<thead><tr><th>ID Front</th><th>Name</th><th>ID Type</th><th>ID Number</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
 <tbody id="appTableBody"></tbody>
 </table>
 </div>
@@ -370,7 +370,7 @@ allUsers = usersRes.data || [];
 const appsByUser = {};
 (appsRes.data || []).forEach(a => { if (a.user_id) appsByUser[a.user_id] = a; });
 if (allUsers.length === 0) {
-tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-gray);">কোনো registered user পাওয়া যায়নি।</td></tr>';
+tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-gray);">No registered users found.</td></tr>';
 return;
 }
 renderUsers(allUsers, appsByUser);
@@ -422,18 +422,19 @@ function renderApps(apps) {
 const tbody = document.getElementById('appTableBody');
 if (apps.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-gray);">No applications.</td></tr>'; return; }
 tbody.innerHTML = apps.map(item => {
-const photoHtml = item.photo_url 
-? `<img src="${item.photo_url}" class="app-photo" onclick="viewPhoto('${item.photo_url}')" style="cursor:pointer;">`
+const photoHtml = item.id_front_url 
+? `<img src="${item.id_front_url}" class="app-photo" onclick="viewPhoto('${item.id_front_url}')" style="cursor:pointer;" title="View ID Front">`
 : `<div class="app-photo no-photo"><i class="fa-solid fa-user"></i></div>`;
 return `<tr>
 <td>${photoHtml}</td>
-<td><code style="color:var(--gold);font-size:0.8rem;">${item.member_id || 'N/A'}</code></td>
-<td><strong style="color:var(--gold);">${item.name}</strong></td>
-<td>${item.specialty || '-'}</td>
-<td>${item.phone || '-'}</td>
+<td><strong style="color:var(--gold);">${item.name}</strong><br><small>${item.email}</small></td>
+<td>${item.id_type || '-'}</td>
+<td><code style="color:var(--gold);font-size:0.8rem;">${item.id_number || 'N/A'}</code></td>
+<td style="max-width:200px; overflow:hidden; text-overflow:ellipsis;">${item.reason || '-'}</td>
 <td><span class="badge ${item.status}">${item.status}</span></td>
 <td>
-${item.photo_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.photo_url}')" title="View Photo"><i class="fa-solid fa-eye"></i></button>` : ''}
+${item.id_front_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.id_front_url}')" title="View ID Front"><i class="fa-solid fa-eye"></i></button>` : ''}
+${item.id_back_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.id_back_url}')" title="View ID Back"><i class="fa-solid fa-id-card"></i></button>` : ''}
 ${item.status === 'pending' ? `
 <button class="action-btn approve" onclick="updateAppStatus(${item.id}, 'approved')" title="Approve"><i class="fa-solid fa-check"></i></button>
 <button class="action-btn reject" onclick="updateAppStatus(${item.id}, 'rejected')" title="Reject"><i class="fa-solid fa-xmark"></i></button>
@@ -446,7 +447,7 @@ ${item.status === 'pending' ? `
 
 function filterApps() {
 const q = document.getElementById('appSearch').value.toLowerCase();
-const filtered = allApps.filter(a => (a.name || '').toLowerCase().includes(q) || (a.member_id || '').toLowerCase().includes(q) || (a.phone || '').toLowerCase().includes(q));
+const filtered = allApps.filter(a => (a.name || '').toLowerCase().includes(q) || (a.member_id || '').toLowerCase().includes(q) || (a.phone || '').toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q) || (a.id_number || '').toLowerCase().includes(q));
 renderApps(filtered);
 }
 
@@ -458,14 +459,46 @@ function closePhotoModal() {
 document.getElementById('photoModal').classList.remove('active');
 }
 
+// নতুন আপডেট: Approve করলে Supabase-এ ইউজার অ্যাকাউন্ট তৈরি হবে
 async function updateAppStatus(id, status) {
-const body = { status: status };
+const res = await apiFetch('membership_applications', { query: `?id=eq.${id}` });
+if (!res.ok || !res.data[0]) return alert('Application not found');
+const app = res.data[0];
+
 if (status === 'approved') {
-body.member_id = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
+const confirmMsg = `Approve ${app.name}?\n\nThis will create an account with:\nEmail: ${app.email}\nPassword: ${app.temp_password}`;
+if (!confirm(confirmMsg)) return;
+
+// 1. Supabase Auth-এ ইউজার তৈরি করা
+const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+method: 'POST',
+headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+body: JSON.stringify({
+email: app.email,
+password: app.temp_password,
+data: { full_name: app.name }
+})
+});
+
+if (!authRes.ok) {
+const err = await authRes.json();
+alert('User creation failed: ' + (err.msg || 'Email might already exist.'));
+return;
 }
-const res = await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id}`, body: body });
-if (res.ok) { loadApplications(); alert(`Application ${status}!`); }
-else alert('Failed to update status.');
+
+// 2. ডেটাবেসে স্ট্যাটাস আপডেট এবং মেম্বার আইডি দেওয়া
+const memberId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
+await apiFetch('membership_applications', { 
+method: 'PATCH', 
+query: `?id=eq.${id}`, 
+body: { status: 'approved', member_id: memberId } 
+});
+
+alert(`✅ User approved and account created!\nMember ID: ${memberId}\nEmail: ${app.email}\nPassword: ${app.temp_password}`);
+} else {
+await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id}`, body: { status: 'rejected' } });
+}
+loadApplications();
 }
 
 async function loadData(table) {
