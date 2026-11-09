@@ -11,34 +11,34 @@
 :root { --bg-dark: #121212; --bg-darker: #0a0a0a; --bg-card: #1a1a1a; --gold: #D4AF37; --text-white: #ffffff; --text-gray: #b3b3b3; --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; --purple: #9b59b6; }
 body { font-family: var(--font-body); background-color: var(--bg-darker); color: var(--text-white); line-height: 1.6; }
 a { text-decoration: none; color: inherit; }
-.login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1920') center/cover; }
+.login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1920') center/cover; padding: 20px; }
 .login-box { background: rgba(26,26,26,0.95); padding: 50px 40px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3); text-align: center; width: 100%; max-width: 400px; }
 .login-box h1 { font-family: var(--font-heading); color: var(--gold); margin-bottom: 10px; }
 .login-box input { width: 100%; padding: 15px; margin: 20px 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(212,175,55,0.3); color: white; border-radius: 5px; font-family: var(--font-body); }
 .btn { padding: 12px 25px; background: var(--gold); color: var(--bg-dark); border: none; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-radius: 5px; font-family: var(--font-body); }
 .btn:hover { background: #b8962e; }
 .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 10px; display: none; }
-.dashboard { display: none; height: 100vh; }
-.sidebar { width: 260px; background: var(--bg-dark); border-right: 1px solid rgba(212,175,55,0.2); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; }
+.dashboard { display: none; height: 100vh; display: flex; flex-direction: row; }
+.sidebar { width: 260px; background: var(--bg-dark); border-right: 1px solid rgba(212,175,55,0.2); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; transition: all 0.3s; }
 .sidebar-header { padding: 25px 20px; border-bottom: 1px solid rgba(212,175,55,0.2); text-align: center; }
 .sidebar-header h2 { font-family: var(--font-heading); color: var(--gold); font-size: 1.5rem; }
 .sidebar-header p { color: var(--text-gray); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; }
 .nav-menu { padding: 20px 0; flex-grow: 1; overflow-y: auto; }
-.nav-item { display: flex; align-items: center; gap: 15px; padding: 15px 25px; color: var(--text-gray); cursor: pointer; border-left: 3px solid transparent; }
+.nav-item { display: flex; align-items: center; gap: 15px; padding: 15px 25px; color: var(--text-gray); cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s; }
 .nav-item:hover, .nav-item.active { background: rgba(212,175,55,0.1); color: var(--gold); border-left-color: var(--gold); }
 .nav-item i { width: 20px; text-align: center; font-size: 1.1rem; }
 .logout-btn { padding: 20px; border-top: 1px solid rgba(212,175,55,0.2); }
 .logout-btn button { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 5px; cursor: pointer; font-family: var(--font-body); font-weight: 600; }
-.main-content { margin-left: 260px; padding: 30px; height: 100vh; overflow-y: auto; background: var(--bg-darker); }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(212,175,55,0.2); }
+.main-content { margin-left: 260px; padding: 30px; height: 100vh; overflow-y: auto; background: var(--bg-darker); flex-grow: 1; transition: all 0.3s; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(212,175,55,0.2); flex-wrap: wrap; gap: 10px; }
 .page-header h1 { font-family: var(--font-heading); color: var(--gold); font-size: 1.8rem; }
 .add-btn { background: var(--gold); color: var(--bg-dark); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; font-family: var(--font-body); display: flex; align-items: center; gap: 8px; }
 .add-btn:hover { background: #b8962e; }
 .view { display: none; }
 .view.active { display: block; }
-.table-container { background: var(--bg-card); border-radius: 8px; border: 1px solid rgba(212,175,55,0.1); overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; text-align: left; }
-th { padding: 15px 20px; background: rgba(212,175,55,0.1); color: var(--gold); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(212,175,55,0.2); }
+.table-container { background: var(--bg-card); border-radius: 8px; border: 1px solid rgba(212,175,55,0.1); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+th { padding: 15px 20px; background: rgba(212,175,55,0.1); color: var(--gold); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(212,175,55,0.2); white-space: nowrap; }
 td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; vertical-align: middle; }
 .action-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 0.8rem; }
 .action-btn.delete { border-color: var(--danger); color: var(--danger); }
@@ -85,12 +85,22 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 .stat-card p { color: var(--text-gray); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
 .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .filter-bar input { flex: 1; min-width: 200px; padding: 10px 15px; background: var(--bg-card); border: 1px solid rgba(212,175,55,0.2); border-radius: 5px; color: white; font-family: var(--font-body); }
+
+/* Mobile View */
+.mobile-toggle { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: var(--bg-dark); width: 55px; height: 55px; border-radius: 50%; border: none; font-size: 1.5rem; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; align-items: center; justify-content: center; }
+
 @media (max-width: 768px) {
-.sidebar { width: 70px; }
-.sidebar-header h2, .sidebar-header p, .nav-item span, .logout-btn button span { display: none; }
-.nav-item { justify-content: center; padding: 15px; }
-.main-content { margin-left: 70px; padding: 15px; }
+.dashboard { flex-direction: column; }
+.sidebar { width: 260px; transform: translateX(-100%); z-index: 999; }
+.sidebar.open { transform: translateX(0); }
+.main-content { margin-left: 0; padding: 15px; margin-top: 60px; }
+.page-header { margin-top: 0; padding-bottom: 15px; }
+.page-header h1 { font-size: 1.4rem; }
+.add-btn { padding: 8px 15px; font-size: 0.8rem; }
 .grid-2 { grid-template-columns: 1fr; }
+.mobile-toggle { display: flex; }
+table { min-width: 500px; }
+th, td { padding: 10px 15px; font-size: 0.8rem; }
 }
 </style>
 </head>
@@ -106,12 +116,13 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 
 <div class="dashboard" id="dashboard">
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
 <div class="sidebar-header"><h2>BPCAB</h2><p>Admin Panel</p></div>
 <div class="nav-menu">
 <div class="nav-item active" onclick="switchView('overview', this)"><i class="fa-solid fa-chart-line"></i> <span>Overview</span></div>
 <div class="nav-item" onclick="switchView('users', this)"><i class="fa-solid fa-users"></i> <span>Registered Users</span></div>
 <div class="nav-item" onclick="switchView('applications', this)"><i class="fa-solid fa-user-plus"></i> <span>Applications</span></div>
+<div class="nav-item" onclick="switchView('specialties', this)"><i class="fa-solid fa-list-check"></i> <span>Specialties</span></div>
 <div class="nav-item" onclick="switchView('settings', this)"><i class="fa-solid fa-sliders"></i> <span>Website Settings</span></div>
 <div class="nav-item" onclick="switchView('chefs', this)"><i class="fa-solid fa-user-tie"></i> <span>Chef Directory</span></div>
 <div class="nav-item" onclick="switchView('jobs', this)"><i class="fa-solid fa-briefcase"></i> <span>Job Board</span></div>
@@ -162,6 +173,20 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 <table>
 <thead><tr><th>ID Front</th><th>Name</th><th>ID Type</th><th>ID Number</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
 <tbody id="appTableBody"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Specialties -->
+<div class="view" id="view-specialties">
+<div class="page-header">
+<h1>Manage Specialties</h1>
+<button class="add-btn" onclick="addSpecialty()"><i class="fa-solid fa-plus"></i> Add Specialty</button>
+</div>
+<div class="table-container">
+<table>
+<thead><tr><th>#</th><th>Specialty Name</th><th>Actions</th></tr></thead>
+<tbody id="specialtyTableBody"></tbody>
 </table>
 </div>
 </div>
@@ -276,6 +301,8 @@ td { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-s
 </div>
 </div>
 
+<button class="mobile-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+
 <div class="modal" id="dataModal">
 <div class="modal-content">
 <h2 id="modalTitle">Add</h2>
@@ -309,7 +336,7 @@ return localStorage.getItem('bpcab_admin_password') || DEFAULT_PASSWORD;
 function login() {
 if (document.getElementById('adminPassword').value === getAdminPassword()) {
 document.getElementById('loginScreen').style.display = 'none';
-document.getElementById('dashboard').style.display = 'block';
+document.getElementById('dashboard').style.display = 'flex';
 loadOverview();
 loadSiteSettings();
 } else {
@@ -324,14 +351,19 @@ document.getElementById('adminPassword').value = '';
 document.getElementById('loginError').style.display = 'none';
 }
 
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
 function switchView(view, el) {
 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 document.getElementById('view-' + view).classList.add('active');
 if (el) el.classList.add('active');
+if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+
 if (view === 'overview') loadOverview();
 if (view === 'users') loadUsers();
 if (view === 'applications') loadApplications();
+if (view === 'specialties') loadSpecialties();
 if (view === 'chefs') loadData('chefs');
 if (view === 'jobs') loadData('jobs');
 if (view === 'gallery') loadData('gallery');
@@ -516,12 +548,42 @@ await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id
 alert(`🔒 User ${app.name} has been quarantined.`);
 } else {
 if (!confirm(`Reject and DELETE ${app.name}'s application permanently?`)) return;
-// অ্যাপ্লিকেশন ডিলিট করে দেওয়া হচ্ছে
 await apiFetch('membership_applications', { method: 'DELETE', query: `?id=eq.${id}` });
 alert(`❌ Application for ${app.name} has been permanently removed.`);
 }
 
 loadApplications();
+}
+
+// Specialties Management
+async function loadSpecialties() {
+const tbody = document.getElementById('specialtyTableBody');
+tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>';
+try {
+const { data } = await apiFetch('specialties', { query: '?select=*&order=id.asc' });
+if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No specialties found.</td></tr>'; return; }
+tbody.innerHTML = data.map((item, index) => `
+<tr>
+<td>${index + 1}</td>
+<td><strong style="color:var(--gold);">${item.name}</strong></td>
+<td><button class="action-btn delete" onclick="deleteSpecialty(${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+</tr>`).join('');
+} catch (e) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Error loading.</td></tr>'; }
+}
+
+async function addSpecialty() {
+const name = prompt("Enter new specialty name:");
+if (!name || name.trim() === '') return;
+const res = await apiFetch('specialties', { method: 'POST', body: { name: name.trim() } });
+if (res.ok) { loadSpecialties(); alert('Specialty added!'); }
+else alert('Failed to add. It might already exist.');
+}
+
+async function deleteSpecialty(id) {
+if (!confirm('Are you sure you want to delete this specialty?')) return;
+const res = await apiFetch('specialties', { method: 'DELETE', query: `?id=eq.${id}` });
+if (res.ok) loadSpecialties();
+else alert('Delete failed.');
 }
 
 async function loadData(table) {
