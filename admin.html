@@ -105,6 +105,7 @@ th, td { padding: 10px 15px; font-size: 0.8rem; }
 </style>
 </head>
 <body>
+<!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen">
 <div class="login-box">
 <img src="https://ui-avatars.com/api/?name=BPCAB&background=121212&color=D4AF37&size=100" alt="Logo" style="border-radius:50%; border:2px solid var(--gold); margin-bottom:20px; width:80px; height:80px;">
@@ -115,6 +116,7 @@ th, td { padding: 10px 15px; font-size: 0.8rem; }
 </div>
 </div>
 
+<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
 <div class="sidebar" id="sidebar">
 <div class="sidebar-header"><h2>BPCAB</h2><p>Admin Panel</p></div>
@@ -135,7 +137,7 @@ th, td { padding: 10px 15px; font-size: 0.8rem; }
 <div class="logout-btn"><button onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Logout</span></button></div>
 </div>
 
-<div class="main-content">
+<div class="main-content" id="mainContent">
 <!-- Overview -->
 <div class="view active" id="view-overview">
 <div class="page-header"><h1>Dashboard Overview</h1></div>
@@ -301,7 +303,7 @@ th, td { padding: 10px 15px; font-size: 0.8rem; }
 </div>
 </div>
 
-<button class="mobile-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+<button class="mobile-toggle" onclick="toggleSidebar()" id="mobileToggleBtn" style="display:none;"><i class="fa-solid fa-bars"></i></button>
 
 <div class="modal" id="dataModal">
 <div class="modal-content">
@@ -328,528 +330,595 @@ const SUPABASE_KEY = 'sb_publishable_83DP8vxg6Utydu38nclHbA_1bCOh-Qf';
 let currentItemId = null;
 let allUsers = [];
 let allApps = [];
-let editingSpecialtyId = null;
+
+// ============ AUTHENTICATION GUARD ============
+function isAdminLoggedIn() {
+    return sessionStorage.getItem('bpcab_admin_session') === 'active';
+}
 
 function getAdminPassword() {
-return localStorage.getItem('bpcab_admin_password') || DEFAULT_PASSWORD;
+    return localStorage.getItem('bpcab_admin_password') || DEFAULT_PASSWORD;
 }
 
-function login() {
-if (document.getElementById('adminPassword').value === getAdminPassword()) {
-document.getElementById('loginScreen').style.display = 'none';
-document.getElementById('dashboard').style.display = 'flex';
-loadOverview();
-loadSiteSettings();
-} else {
-document.getElementById('loginError').style.display = 'block';
+function requireLogin() {
+    if (!isAdminLoggedIn()) {
+        alert('❌ Unauthorized! Please login first.');
+        throw new Error('Not logged in');
+    }
 }
+
+// ============ LOGIN / LOGOUT ============
+function login() {
+    if (document.getElementById('adminPassword').value === getAdminPassword()) {
+        sessionStorage.setItem('bpcab_admin_session', 'active');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+        if (window.innerWidth <= 768) {
+            document.getElementById('mobileToggleBtn').style.display = 'flex';
+        }
+        loadOverview();
+        loadSiteSettings();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
 }
 
 function logout() {
-document.getElementById('loginScreen').style.display = 'flex';
-document.getElementById('dashboard').style.display = 'none';
-document.getElementById('adminPassword').value = '';
-document.getElementById('loginError').style.display = 'none';
+    if (!confirm('Are you sure you want to logout?')) return;
+    // Clear session flag
+    sessionStorage.removeItem('bpcab_admin_session');
+    // Hide dashboard, show login
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('mobileToggleBtn').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('loginError').style.display = 'none';
 }
 
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function toggleSidebar() { 
+    if (!isAdminLoggedIn()) return;
+    document.getElementById('sidebar').classList.toggle('open'); 
+}
 
+// ============ VIEW SWITCHER ============
 function switchView(view, el) {
-document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-document.getElementById('view-' + view).classList.add('active');
-if (el) el.classList.add('active');
-if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+    requireLogin();
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    if (el) el.classList.add('active');
+    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
 
-if (view === 'overview') loadOverview();
-if (view === 'users') loadUsers();
-if (view === 'applications') loadApplications();
-if (view === 'specialties') loadSpecialties();
-if (view === 'chefs') loadData('chefs');
-if (view === 'jobs') loadData('jobs');
-if (view === 'gallery') loadData('gallery');
-if (view === 'learning') loadData('learning');
-if (view === 'certificates') loadData('certificates');
-if (view === 'messages') loadData('messages');
-if (view === 'settings') loadSiteSettings();
+    if (view === 'overview') loadOverview();
+    if (view === 'users') loadUsers();
+    if (view === 'applications') loadApplications();
+    if (view === 'specialties') loadSpecialties();
+    if (view === 'chefs') loadData('chefs');
+    if (view === 'jobs') loadData('jobs');
+    if (view === 'gallery') loadData('gallery');
+    if (view === 'learning') loadData('learning');
+    if (view === 'certificates') loadData('certificates');
+    if (view === 'messages') loadData('messages');
+    if (view === 'settings') loadSiteSettings();
 }
 
 async function apiFetch(table, options = {}) {
-const url = `${SUPABASE_URL}/rest/v1/${table}${options.query || ''}`;
-const res = await fetch(url, {
-method: options.method || 'GET',
-headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': options.prefer || 'return=representation' },
-body: options.body ? JSON.stringify(options.body) : null
-});
-const text = await res.text();
-let data;
-try { data = text ? JSON.parse(text) : []; } catch(e) { data = []; }
-return { ok: res.ok, data };
+    requireLogin();
+    const url = `${SUPABASE_URL}/rest/v1/${table}${options.query || ''}`;
+    const res = await fetch(url, {
+        method: options.method || 'GET',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': options.prefer || 'return=representation' },
+        body: options.body ? JSON.stringify(options.body) : null
+    });
+    const text = await res.text();
+    let data;
+    try { data = text ? JSON.parse(text) : []; } catch(e) { data = []; }
+    return { ok: res.ok, data };
 }
 
 async function loadOverview() {
-try {
-const [appsRes, chefsRes, jobsRes, certsRes, usersRes] = await Promise.all([
-apiFetch('membership_applications', { query: '?select=*' }),
-apiFetch('chefs', { query: '?select=id' }),
-apiFetch('jobs', { query: '?select=id' }),
-apiFetch('certificates', { query: '?select=id' }),
-apiFetch('registered_users', { query: '?select=*' })
-]);
-const apps = appsRes.data || [];
-document.getElementById('statPendingApps').innerText = apps.filter(a => a.status === 'pending').length;
-document.getElementById('statApprovedApps').innerText = apps.filter(a => a.status === 'approved').length;
-document.getElementById('statChefs').innerText = (chefsRes.data || []).length;
-document.getElementById('statJobs').innerText = (jobsRes.data || []).length;
-document.getElementById('statCerts').innerText = (certsRes.data || []).length;
-document.getElementById('statTotalUsers').innerText = (usersRes.data || []).length;
-} catch (e) { console.error(e); }
+    requireLogin();
+    try {
+        const [appsRes, chefsRes, jobsRes, certsRes, usersRes] = await Promise.all([
+            apiFetch('membership_applications', { query: '?select=*' }),
+            apiFetch('chefs', { query: '?select=id' }),
+            apiFetch('jobs', { query: '?select=id' }),
+            apiFetch('certificates', { query: '?select=id' }),
+            apiFetch('registered_users', { query: '?select=*' })
+        ]);
+        const apps = appsRes.data || [];
+        document.getElementById('statPendingApps').innerText = apps.filter(a => a.status === 'pending').length;
+        document.getElementById('statApprovedApps').innerText = apps.filter(a => a.status === 'approved').length;
+        document.getElementById('statChefs').innerText = (chefsRes.data || []).length;
+        document.getElementById('statJobs').innerText = (jobsRes.data || []).length;
+        document.getElementById('statCerts').innerText = (certsRes.data || []).length;
+        document.getElementById('statTotalUsers').innerText = (usersRes.data || []).length;
+    } catch (e) { console.error(e); }
 }
 
 async function loadUsers() {
-const tbody = document.getElementById('userTableBody');
-tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading users...</td></tr>';
-try {
-const usersRes = await apiFetch('registered_users', { query: '?select=*&order=created_at.desc' });
-const appsRes = await apiFetch('membership_applications', { query: '?select=user_id,member_id,status,photo_change_count' });
-allUsers = usersRes.data || [];
-const appsByUser = {};
-(appsRes.data || []).forEach(a => { if (a.user_id) appsByUser[a.user_id] = a; });
-if (allUsers.length === 0) {
-tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-gray);">No registered users found.</td></tr>';
-return;
-}
-renderUsers(allUsers, appsByUser);
-} catch (e) {
-console.error(e);
-tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--danger);">Error loading users.</td></tr>';
-}
+    requireLogin();
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading users...</td></tr>';
+    try {
+        const usersRes = await apiFetch('registered_users', { query: '?select=*&order=created_at.desc' });
+        const appsRes = await apiFetch('membership_applications', { query: '?select=user_id,member_id,status,photo_change_count' });
+        allUsers = usersRes.data || [];
+        const appsByUser = {};
+        (appsRes.data || []).forEach(a => { if (a.user_id) appsByUser[a.user_id] = a; });
+        if (allUsers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-gray);">No registered users found.</td></tr>';
+            return;
+        }
+        renderUsers(allUsers, appsByUser);
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--danger);">Error loading users.</td></tr>';
+    }
 }
 
 function renderUsers(users, appsByUser) {
-const tbody = document.getElementById('userTableBody');
-if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-gray);">No users found.</td></tr>'; return; }
-tbody.innerHTML = users.map((u, i) => {
-const m = appsByUser[u.id];
-let membershipHtml = '<span class="badge" style="background:rgba(255,255,255,0.1);color:var(--text-gray);">No Application</span>';
-let photoChanges = '0';
-let memberId = '-';
-if (m) {
-if (m.status === 'approved') membershipHtml = `<span class="badge approved">Approved (${m.member_id})</span>`;
-else if (m.status === 'pending') membershipHtml = '<span class="badge pending">Pending</span>';
-else if (m.status === 'rejected') membershipHtml = '<span class="badge rejected">Rejected</span>';
-else if (m.status === 'quarantine') membershipHtml = '<span class="badge quarantine">Quarantined</span>';
-photoChanges = m.photo_change_count || 0;
-memberId = m.member_id || '-';
-}
-const joined = u.created_at ? new Date(u.created_at).toLocaleDateString() : '-';
-return `<tr><td>${i + 1}</td><td><code style="color:var(--gold);font-size:0.8rem;">${memberId}</code></td><td><strong style="color:var(--gold);">${u.full_name || '-'}</strong></td><td style="font-size:0.85rem;">${u.email || '-'}</td><td style="font-size:0.8rem;">${joined}</td><td><span class="badge" style="background:rgba(52,152,219,0.2);color:#3498db;">${photoChanges} / 10</span></td><td>${membershipHtml}</td></tr>`;
-}).join('');
+    requireLogin();
+    const tbody = document.getElementById('userTableBody');
+    if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-gray);">No users found.</td></tr>'; return; }
+    tbody.innerHTML = users.map((u, i) => {
+        const m = appsByUser[u.id];
+        let membershipHtml = '<span class="badge" style="background:rgba(255,255,255,0.1);color:var(--text-gray);">No Application</span>';
+        let photoChanges = '0';
+        let memberId = '-';
+        if (m) {
+            if (m.status === 'approved') membershipHtml = `<span class="badge approved">Approved (${m.member_id})</span>`;
+            else if (m.status === 'pending') membershipHtml = '<span class="badge pending">Pending</span>';
+            else if (m.status === 'rejected') membershipHtml = '<span class="badge rejected">Rejected</span>';
+            else if (m.status === 'quarantine') membershipHtml = '<span class="badge quarantine">Quarantined</span>';
+            photoChanges = m.photo_change_count || 0;
+            memberId = m.member_id || '-';
+        }
+        const joined = u.created_at ? new Date(u.created_at).toLocaleDateString() : '-';
+        return `<tr><td>${i + 1}</td><td><code style="color:var(--gold);font-size:0.8rem;">${memberId}</code></td><td><strong style="color:var(--gold);">${u.full_name || '-'}</strong></td><td style="font-size:0.85rem;">${u.email || '-'}</td><td style="font-size:0.8rem;">${joined}</td><td><span class="badge" style="background:rgba(52,152,219,0.2);color:#3498db;">${photoChanges} / 10</span></td><td>${membershipHtml}</td></tr>`;
+    }).join('');
 }
 
 async function filterUsers() {
-const q = document.getElementById('userSearch').value.toLowerCase();
-const filtered = allUsers.filter(u => (u.email || '').toLowerCase().includes(q) || (u.full_name || '').toLowerCase().includes(q));
-const res = await apiFetch('membership_applications', { query: '?select=user_id,member_id,status,photo_change_count' });
-const appsByUser = {};
-(res.data || []).forEach(a => { if (a.user_id) appsByUser[a.user_id] = a; });
-renderUsers(filtered, appsByUser);
+    requireLogin();
+    const q = document.getElementById('userSearch').value.toLowerCase();
+    const filtered = allUsers.filter(u => (u.email || '').toLowerCase().includes(q) || (u.full_name || '').toLowerCase().includes(q));
+    const res = await apiFetch('membership_applications', { query: '?select=user_id,member_id,status,photo_change_count' });
+    const appsByUser = {};
+    (res.data || []).forEach(a => { if (a.user_id) appsByUser[a.user_id] = a; });
+    renderUsers(filtered, appsByUser);
 }
 
 async function loadApplications() {
-const tbody = document.getElementById('appTableBody');
-tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>';
-try {
-const res = await apiFetch('membership_applications', { query: '?select=*&order=created_at.desc' });
-allApps = res.data || [];
-renderApps(allApps);
-} catch (e) {
-tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--danger);">Error loading applications.</td></tr>';
-}
+    requireLogin();
+    const tbody = document.getElementById('appTableBody');
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>';
+    try {
+        const res = await apiFetch('membership_applications', { query: '?select=*&order=created_at.desc' });
+        allApps = res.data || [];
+        renderApps(allApps);
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--danger);">Error loading applications.</td></tr>';
+    }
 }
 
 function renderApps(apps) {
-const tbody = document.getElementById('appTableBody');
-if (apps.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-gray);">No applications.</td></tr>'; return; }
-tbody.innerHTML = apps.map(item => {
-const photoHtml = item.id_front_url 
-? `<img src="${item.id_front_url}" class="app-photo" onclick="viewPhoto('${item.id_front_url}')" style="cursor:pointer;" title="View ID Front">`
-: `<div class="app-photo no-photo"><i class="fa-solid fa-user"></i></div>`;
-return `<tr>
-<td>${photoHtml}</td>
-<td><code style="color:var(--gold);font-size:0.75rem;">${item.member_id || 'N/A'}</code></td>
-<td><strong style="color:var(--gold);">${item.name}</strong><br><small>${item.email}</small></td>
-<td>${item.id_type || '-'}: ${item.id_number || 'N/A'}</td>
-<td><code style="color:#3498db;font-size:0.75rem;">${item.transaction_id || '-'}</code></td>
-<td>${item.membership_fee_paid || '-'} BDT</td>
-<td><span class="badge" style="background:rgba(52,152,219,0.2);color:#3498db;">${item.photo_change_count || 0}</span></td>
-<td><span class="badge ${item.status}">${item.status}</span></td>
-<td>
-${item.id_front_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.id_front_url}')" title="View ID Front"><i class="fa-solid fa-eye"></i></button>` : ''}
-${item.id_back_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.id_back_url}')" title="View ID Back"><i class="fa-solid fa-id-card"></i></button>` : ''}
-${item.photo_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.photo_url}')" title="View Profile Photo"><i class="fa-solid fa-user"></i></button>` : ''}
-${item.status === 'pending' ? `
-<button class="action-btn approve" onclick="updateAppStatus(${item.id}, 'approved')" title="Approve"><i class="fa-solid fa-check"></i></button>
-<button class="action-btn quarantine" onclick="updateAppStatus(${item.id}, 'quarantine')" title="Quarantine"><i class="fa-solid fa-user-lock"></i></button>
-<button class="action-btn reject" onclick="updateAppStatus(${item.id}, 'rejected')" title="Reject & Delete"><i class="fa-solid fa-xmark"></i></button>
-` : ''}
-<button class="action-btn delete" onclick="deleteItem('membership_applications', ${item.id})"><i class="fa-solid fa-trash"></i></button>
-</td>
-</tr>`;
-}).join('');
+    requireLogin();
+    const tbody = document.getElementById('appTableBody');
+    if (apps.length === 0) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-gray);">No applications.</td></tr>'; return; }
+    tbody.innerHTML = apps.map(item => {
+        const photoHtml = item.id_front_url 
+            ? `<img src="${item.id_front_url}" class="app-photo" onclick="viewPhoto('${item.id_front_url}')" style="cursor:pointer;" title="View ID Front">`
+            : `<div class="app-photo no-photo"><i class="fa-solid fa-user"></i></div>`;
+        return `<tr>
+            <td>${photoHtml}</td>
+            <td><code style="color:var(--gold);font-size:0.75rem;">${item.member_id || 'N/A'}</code></td>
+            <td><strong style="color:var(--gold);">${item.name}</strong><br><small>${item.email}</small></td>
+            <td>${item.id_type || '-'}: ${item.id_number || 'N/A'}</td>
+            <td><code style="color:#3498db;font-size:0.75rem;">${item.transaction_id || '-'}</code></td>
+            <td>${item.membership_fee_paid || '-'} BDT</td>
+            <td><span class="badge" style="background:rgba(52,152,219,0.2);color:#3498db;">${item.photo_change_count || 0}</span></td>
+            <td><span class="badge ${item.status}">${item.status}</span></td>
+            <td>
+                ${item.id_front_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.id_front_url}')" title="View ID Front"><i class="fa-solid fa-eye"></i></button>` : ''}
+                ${item.id_back_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.id_back_url}')" title="View ID Back"><i class="fa-solid fa-id-card"></i></button>` : ''}
+                ${item.photo_url ? `<button class="action-btn view-photo" onclick="viewPhoto('${item.photo_url}')" title="View Profile Photo"><i class="fa-solid fa-user"></i></button>` : ''}
+                ${item.status === 'pending' ? `
+                    <button class="action-btn approve" onclick="updateAppStatus(${item.id}, 'approved')" title="Approve"><i class="fa-solid fa-check"></i></button>
+                    <button class="action-btn quarantine" onclick="updateAppStatus(${item.id}, 'quarantine')" title="Quarantine"><i class="fa-solid fa-user-lock"></i></button>
+                    <button class="action-btn reject" onclick="updateAppStatus(${item.id}, 'rejected')" title="Reject & Delete"><i class="fa-solid fa-xmark"></i></button>
+                ` : ''}
+                <button class="action-btn delete" onclick="deleteItem('membership_applications', ${item.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
 }
 
 function filterApps() {
-const q = document.getElementById('appSearch').value.toLowerCase();
-const filtered = allApps.filter(a => (a.name || '').toLowerCase().includes(q) || (a.member_id || '').toLowerCase().includes(q) || (a.phone || '').toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q) || (a.id_number || '').toLowerCase().includes(q) || (a.transaction_id || '').toLowerCase().includes(q));
-renderApps(filtered);
+    requireLogin();
+    const q = document.getElementById('appSearch').value.toLowerCase();
+    const filtered = allApps.filter(a => (a.name || '').toLowerCase().includes(q) || (a.member_id || '').toLowerCase().includes(q) || (a.phone || '').toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q) || (a.id_number || '').toLowerCase().includes(q) || (a.transaction_id || '').toLowerCase().includes(q));
+    renderApps(filtered);
 }
 
 function viewPhoto(url) {
-document.getElementById('photoModalImg').src = url;
-document.getElementById('photoModal').classList.add('active');
+    requireLogin();
+    document.getElementById('photoModalImg').src = url;
+    document.getElementById('photoModal').classList.add('active');
 }
 function closePhotoModal() {
-document.getElementById('photoModal').classList.remove('active');
+    document.getElementById('photoModal').classList.remove('active');
 }
 
 async function updateAppStatus(id, status) {
-const res = await apiFetch('membership_applications', { query: `?id=eq.${id}` });
-if (!res.ok || !res.data[0]) return alert('Application not found');
-const app = res.data[0];
+    requireLogin();
+    const res = await apiFetch('membership_applications', { query: `?id=eq.${id}` });
+    if (!res.ok || !res.data[0]) return alert('Application not found');
+    const app = res.data[0];
 
-if (status === 'approved') {
-const confirmMsg = `Approve ${app.name}?\n\nThis will create an account with:\nEmail: ${app.email}\nPassword: ${app.temp_password}`;
-if (!confirm(confirmMsg)) return;
+    if (status === 'approved') {
+        const confirmMsg = `Approve ${app.name}?\n\nThis will create an account with:\nEmail: ${app.email}\nPassword: ${app.temp_password}`;
+        if (!confirm(confirmMsg)) return;
 
-const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-method: 'POST',
-headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
-body: JSON.stringify({
-email: app.email,
-password: app.temp_password,
-data: { full_name: app.name }
-})
-});
+        const authRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: app.email,
+                password: app.temp_password,
+                data: { full_name: app.name }
+            })
+        });
 
-if (!authRes.ok) {
-const err = await authRes.json();
-alert('User creation failed: ' + (err.msg || 'Email might already exist.'));
-return;
-}
+        if (!authRes.ok) {
+            const err = await authRes.json();
+            alert('User creation failed: ' + (err.msg || 'Email might already exist.'));
+            return;
+        }
 
-const memberId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
-await apiFetch('membership_applications', { 
-method: 'PATCH', 
-query: `?id=eq.${id}`, 
-body: { status: 'approved', member_id: memberId } 
-});
+        const memberId = 'BPCAB-' + Math.floor(10000 + Math.random() * 90000);
+        await apiFetch('membership_applications', { 
+            method: 'PATCH', 
+            query: `?id=eq.${id}`, 
+            body: { status: 'approved', member_id: memberId } 
+        });
 
-alert(`✅ User approved and account created!\nMember ID: ${memberId}\nEmail: ${app.email}\nPassword: ${app.temp_password}`);
-} else if (status === 'quarantine') {
-if (!confirm(`Quarantine ${app.name}?`)) return;
-await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id}`, body: { status: 'quarantine' } });
-alert(`🔒 User ${app.name} quarantined.`);
-} else {
-if (!confirm(`Reject and DELETE ${app.name}'s application permanently?`)) return;
-await apiFetch('membership_applications', { method: 'DELETE', query: `?id=eq.${id}` });
-alert(`❌ Application removed.`);
-}
-loadApplications();
+        alert(`✅ User approved and account created!\nMember ID: ${memberId}\nEmail: ${app.email}\nPassword: ${app.temp_password}`);
+    } else if (status === 'quarantine') {
+        if (!confirm(`Quarantine ${app.name}?`)) return;
+        await apiFetch('membership_applications', { method: 'PATCH', query: `?id=eq.${id}`, body: { status: 'quarantine' } });
+        alert(`🔒 User ${app.name} quarantined.`);
+    } else {
+        if (!confirm(`Reject and DELETE ${app.name}'s application permanently?`)) return;
+        await apiFetch('membership_applications', { method: 'DELETE', query: `?id=eq.${id}` });
+        alert(`❌ Application removed.`);
+    }
+    loadApplications();
 }
 
 // Specialties Management
 async function loadSpecialties() {
-const tbody = document.getElementById('specialtyTableBody');
-tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>';
-try {
-const { data } = await apiFetch('specialties', { query: '?select=*&order=id.asc' });
-if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No specialties found.</td></tr>'; return; }
-tbody.innerHTML = data.map((item, index) => `
-<tr>
-<td>${index + 1}</td>
-<td><strong style="color:var(--gold);">${item.name}</strong></td>
-<td>${item.fee || 1000} BDT</td>
-<td><span class="badge ${item.is_active ? 'active' : 'inactive'}">${item.is_active ? 'Active' : 'Inactive'}</span></td>
-<td>
-<button class="action-btn edit" onclick="editSpecialty(${item.id}, '${item.name}', ${item.fee || 1000})"><i class="fa-solid fa-pen"></i></button>
-<button class="action-btn ${item.is_active ? 'toggle-off' : 'toggle-on'}" onclick="toggleSpecialty(${item.id}, ${item.is_active})"><i class="fa-solid fa-${item.is_active ? 'eye-slash' : 'eye'}"></i></button>
-<button class="action-btn delete" onclick="deleteSpecialty(${item.id})"><i class="fa-solid fa-trash"></i></button>
-</td>
-</tr>`).join('');
-} catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Error loading.</td></tr>'; }
+    requireLogin();
+    const tbody = document.getElementById('specialtyTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>';
+    try {
+        const { data } = await apiFetch('specialties', { query: '?select=*&order=id.asc' });
+        if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No specialties found.</td></tr>'; return; }
+        tbody.innerHTML = data.map((item, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td><strong style="color:var(--gold);">${item.name}</strong></td>
+            <td>${item.fee || 1000} BDT</td>
+            <td><span class="badge ${item.is_active ? 'active' : 'inactive'}">${item.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+                <button class="action-btn edit" onclick="editSpecialty(${item.id}, '${item.name}', ${item.fee || 1000})"><i class="fa-solid fa-pen"></i></button>
+                <button class="action-btn ${item.is_active ? 'toggle-off' : 'toggle-on'}" onclick="toggleSpecialty(${item.id}, ${item.is_active})"><i class="fa-solid fa-${item.is_active ? 'eye-slash' : 'eye'}"></i></button>
+                <button class="action-btn delete" onclick="deleteSpecialty(${item.id})"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`).join('');
+    } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Error loading.</td></tr>'; }
 }
 
 async function addSpecialty() {
-const name = prompt("Enter new specialty name:");
-if (!name || name.trim() === '') return;
-const feeStr = prompt("Enter membership fee (BDT):", "1000");
-const fee = parseFloat(feeStr) || 1000;
-const res = await apiFetch('specialties', { method: 'POST', body: { name: name.trim(), fee: fee, is_active: true } });
-if (res.ok) { loadSpecialties(); alert('Specialty added!'); }
-else alert('Failed to add. It might already exist.');
+    requireLogin();
+    const name = prompt("Enter new specialty name:");
+    if (!name || name.trim() === '') return;
+    const feeStr = prompt("Enter membership fee (BDT):", "1000");
+    const fee = parseFloat(feeStr) || 1000;
+    const res = await apiFetch('specialties', { method: 'POST', body: { name: name.trim(), fee: fee, is_active: true } });
+    if (res.ok) { loadSpecialties(); alert('Specialty added!'); }
+    else alert('Failed to add. It might already exist.');
 }
 
 async function editSpecialty(id, oldName, oldFee) {
-const name = prompt("Edit specialty name:", oldName);
-if (!name || name.trim() === '') return;
-const feeStr = prompt("Edit fee (BDT):", oldFee);
-const fee = parseFloat(feeStr) || oldFee;
-const res = await apiFetch('specialties', { method: 'PATCH', query: `?id=eq.${id}`, body: { name: name.trim(), fee: fee } });
-if (res.ok) { loadSpecialties(); alert('Specialty updated!'); }
-else alert('Update failed.');
+    requireLogin();
+    const name = prompt("Edit specialty name:", oldName);
+    if (!name || name.trim() === '') return;
+    const feeStr = prompt("Edit fee (BDT):", oldFee);
+    const fee = parseFloat(feeStr) || oldFee;
+    const res = await apiFetch('specialties', { method: 'PATCH', query: `?id=eq.${id}`, body: { name: name.trim(), fee: fee } });
+    if (res.ok) { loadSpecialties(); alert('Specialty updated!'); }
+    else alert('Update failed.');
 }
 
 async function toggleSpecialty(id, currentState) {
-const newState = !currentState;
-const res = await apiFetch('specialties', { method: 'PATCH', query: `?id=eq.${id}`, body: { is_active: newState } });
-if (res.ok) { loadSpecialties(); alert(`Specialty ${newState ? 'activated' : 'deactivated'}!`); }
-else alert('Toggle failed.');
+    requireLogin();
+    const newState = !currentState;
+    const res = await apiFetch('specialties', { method: 'PATCH', query: `?id=eq.${id}`, body: { is_active: newState } });
+    if (res.ok) { loadSpecialties(); alert(`Specialty ${newState ? 'activated' : 'deactivated'}!`); }
+    else alert('Toggle failed.');
 }
 
 async function deleteSpecialty(id) {
-if (!confirm('Delete this specialty permanently?')) return;
-const res = await apiFetch('specialties', { method: 'DELETE', query: `?id=eq.${id}` });
-if (res.ok) loadSpecialties();
-else alert('Delete failed.');
+    requireLogin();
+    if (!confirm('Delete this specialty permanently?')) return;
+    const res = await apiFetch('specialties', { method: 'DELETE', query: `?id=eq.${id}` });
+    if (res.ok) loadSpecialties();
+    else alert('Delete failed.');
 }
 
 async function loadData(table) {
-const tbodyId = table === 'chefs' ? 'chefTableBody' : table === 'jobs' ? 'jobTableBody' : table === 'gallery' ? 'galleryTableBody' : table === 'learning' ? 'learningTableBody' : table === 'certificates' ? 'certTableBody' : 'messageTableBody';
-const tbody = document.getElementById(tbodyId);
-if (!tbody) return;
-const cols = table === 'messages' ? 4 : table === 'gallery' ? 4 : table === 'learning' ? 4 : table === 'certificates' ? 6 : 6;
-tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>`;
+    requireLogin();
+    const tbodyId = table === 'chefs' ? 'chefTableBody' : table === 'jobs' ? 'jobTableBody' : table === 'gallery' ? 'galleryTableBody' : table === 'learning' ? 'learningTableBody' : table === 'certificates' ? 'certTableBody' : 'messageTableBody';
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const cols = table === 'messages' ? 4 : table === 'gallery' ? 4 : table === 'learning' ? 4 : table === 'certificates' ? 6 : 6;
+    tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-spin" style="color:var(--gold);"></i> Loading...</td></tr>`;
 
-try {
-const { data } = await apiFetch(table, { query: '?select=*' });
-if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px; color:var(--text-gray);">No data.</td></tr>`; return; }
+    try {
+        const { data } = await apiFetch(table, { query: '?select=*' });
+        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px; color:var(--text-gray);">No data.</td></tr>`; return; }
 
-if (table === 'chefs') {
-tbody.innerHTML = data.map(item => `
-<tr>
-<td><img src="${item.image_url || 'https://ui-avatars.com/api/?name=' + item.name}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"></td>
-<td><strong style="color:var(--gold);">${item.name}</strong></td>
-<td>${item.specialty || '-'}</td>
-<td>${item.workplace || '-'}</td>
-<td>${item.experience || '-'} Yrs</td>
-<td><button class="action-btn" onclick="editItem('chefs', ${item.id}, '${item.name}', '${item.specialty || ''}', '${item.workplace || ''}', '${item.experience || ''}', '${item.image_url || ''}')"><i class="fa-solid fa-pen"></i></button><button class="action-btn delete" onclick="deleteItem('chefs', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
-</tr>`).join('');
-} else if (table === 'jobs') {
-tbody.innerHTML = data.map(item => `
-<tr>
-<td><strong style="color:var(--gold);">${item.title}</strong></td>
-<td>${item.company || '-'}</td>
-<td>${item.location || '-'}</td>
-<td>${item.type || '-'}</td>
-<td><button class="action-btn" onclick="editItem('jobs', ${item.id}, '${item.title}', '${item.company || ''}', '${item.location || ''}', '${item.type || ''}', '${item.salary || ''}')"><i class="fa-solid fa-pen"></i></button><button class="action-btn delete" onclick="deleteItem('jobs', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
-</tr>`).join('');
-} else if (table === 'gallery') {
-tbody.innerHTML = data.map(item => `
-<tr>
-<td>${item.media_type === 'video' ? '<video src="'+item.media_url+'" style="width:60px;height:40px;object-fit:cover;"></video>' : '<img src="'+item.media_url+'" style="width:60px;height:40px;object-fit:cover;">'}</td>
-<td><strong style="color:var(--gold);">${item.title}</strong></td>
-<td><span class="badge image">${item.media_type}</span></td>
-<td><button class="action-btn delete" onclick="deleteItem('gallery', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
-</tr>`).join('');
-} else if (table === 'learning') {
-tbody.innerHTML = data.map(item => `
-<tr>
-<td><span class="badge recipe">${item.type}</span></td>
-<td><strong style="color:var(--gold);">${item.title}</strong></td>
-<td>${item.type === 'training' ? (item.date || '-') + ' | ' + (item.location || '-') : 'Video'}</td>
-<td><button class="action-btn delete" onclick="deleteItem('learning', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
-</tr>`).join('');
-} else if (table === 'certificates') {
-tbody.innerHTML = data.map(item => `
-<tr>
-<td><code style="color:var(--gold);font-size:0.8rem;">${item.member_id}</code></td>
-<td><strong style="color:var(--gold);">${item.member_name}</strong></td>
-<td>${item.course_name}</td>
-<td><code style="color:var(--gold);">${item.certificate_code}</code></td>
-<td>${item.issue_date || '-'}</td>
-<td><button class="action-btn delete" onclick="deleteItem('certificates', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
-</tr>`).join('');
-} else if (table === 'messages') {
-tbody.innerHTML = data.map(item => `
-<tr>
-<td>${item.name || '-'}</td>
-<td>${item.email || '-'}</td>
-<td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.message || '-'}</td>
-<td>${item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</td>
-</tr>`).join('');
-}
-} catch (e) { tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px; color:var(--danger);">Error.</td></tr>`; }
+        if (table === 'chefs') {
+            tbody.innerHTML = data.map(item => `
+            <tr>
+                <td><img src="${item.image_url || 'https://ui-avatars.com/api/?name=' + item.name}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"></td>
+                <td><strong style="color:var(--gold);">${item.name}</strong></td>
+                <td>${item.specialty || '-'}</td>
+                <td>${item.workplace || '-'}</td>
+                <td>${item.experience || '-'} Yrs</td>
+                <td><button class="action-btn" onclick="editItem('chefs', ${item.id}, '${item.name}', '${item.specialty || ''}', '${item.workplace || ''}', '${item.experience || ''}', '${item.image_url || ''}')"><i class="fa-solid fa-pen"></i></button><button class="action-btn delete" onclick="deleteItem('chefs', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`).join('');
+        } else if (table === 'jobs') {
+            tbody.innerHTML = data.map(item => `
+            <tr>
+                <td><strong style="color:var(--gold);">${item.title}</strong></td>
+                <td>${item.company || '-'}</td>
+                <td>${item.location || '-'}</td>
+                <td>${item.type || '-'}</td>
+                <td><button class="action-btn" onclick="editItem('jobs', ${item.id}, '${item.title}', '${item.company || ''}', '${item.location || ''}', '${item.type || ''}', '${item.salary || ''}')"><i class="fa-solid fa-pen"></i></button><button class="action-btn delete" onclick="deleteItem('jobs', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`).join('');
+        } else if (table === 'gallery') {
+            tbody.innerHTML = data.map(item => `
+            <tr>
+                <td>${item.media_type === 'video' ? '<video src="'+item.media_url+'" style="width:60px;height:40px;object-fit:cover;"></video>' : '<img src="'+item.media_url+'" style="width:60px;height:40px;object-fit:cover;">'}</td>
+                <td><strong style="color:var(--gold);">${item.title}</strong></td>
+                <td><span class="badge" style="background:rgba(52,152,219,0.2);color:#3498db;">${item.media_type}</span></td>
+                <td><button class="action-btn delete" onclick="deleteItem('gallery', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`).join('');
+        } else if (table === 'learning') {
+            tbody.innerHTML = data.map(item => `
+            <tr>
+                <td><span class="badge" style="background:rgba(212,175,55,0.2);color:var(--gold);">${item.type}</span></td>
+                <td><strong style="color:var(--gold);">${item.title}</strong></td>
+                <td>${item.type === 'training' ? (item.date || '-') + ' | ' + (item.location || '-') : 'Video'}</td>
+                <td><button class="action-btn delete" onclick="deleteItem('learning', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`).join('');
+        } else if (table === 'certificates') {
+            tbody.innerHTML = data.map(item => `
+            <tr>
+                <td><code style="color:var(--gold);font-size:0.8rem;">${item.member_id}</code></td>
+                <td><strong style="color:var(--gold);">${item.member_name}</strong></td>
+                <td>${item.course_name}</td>
+                <td><code style="color:var(--gold);">${item.certificate_code}</code></td>
+                <td>${item.issue_date || '-'}</td>
+                <td><button class="action-btn delete" onclick="deleteItem('certificates', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`).join('');
+        } else if (table === 'messages') {
+            tbody.innerHTML = data.map(item => `
+            <tr>
+                <td>${item.name || '-'}</td>
+                <td>${item.email || '-'}</td>
+                <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.message || '-'}</td>
+                <td>${item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</td>
+            </tr>`).join('');
+        }
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:30px; color:var(--danger);">Error.</td></tr>`; }
 }
 
 async function loadSiteSettings() {
-const { data } = await apiFetch('site_settings', { query: '?id=eq.1' });
-if (!data || data.length === 0) return;
-const s = data[0];
-const map = { set_site_name: s.site_name, set_site_tagline: s.site_tagline, set_logo_url: s.logo_url, set_hero_title: s.hero_title, set_hero_subtitle: s.hero_subtitle, set_about_text: s.about_text, set_contact_phone: s.contact_phone, set_contact_email: s.contact_email, set_contact_address: s.contact_address, set_whatsapp_number: s.whatsapp_number, set_facebook_url: s.facebook_url, set_instagram_url: s.instagram_url, set_linkedin_url: s.linkedin_url, set_youtube_url: s.youtube_url, set_telegram_bot_token: s.telegram_bot_token, set_telegram_chat_id: s.telegram_chat_id, set_membership_fee_bkash: s.membership_fee_bkash, set_membership_fee_nagad: s.membership_fee_nagad };
-Object.keys(map).forEach(id => { const el = document.getElementById(id); if (el) el.value = map[id] || ''; });
+    requireLogin();
+    const { data } = await apiFetch('site_settings', { query: '?id=eq.1' });
+    if (!data || data.length === 0) return;
+    const s = data[0];
+    const map = { set_site_name: s.site_name, set_site_tagline: s.site_tagline, set_logo_url: s.logo_url, set_hero_title: s.hero_title, set_hero_subtitle: s.hero_subtitle, set_about_text: s.about_text, set_contact_phone: s.contact_phone, set_contact_email: s.contact_email, set_contact_address: s.contact_address, set_whatsapp_number: s.whatsapp_number, set_facebook_url: s.facebook_url, set_instagram_url: s.instagram_url, set_linkedin_url: s.linkedin_url, set_youtube_url: s.youtube_url, set_telegram_bot_token: s.telegram_bot_token, set_telegram_chat_id: s.telegram_chat_id, set_membership_fee_bkash: s.membership_fee_bkash, set_membership_fee_nagad: s.membership_fee_nagad };
+    Object.keys(map).forEach(id => { const el = document.getElementById(id); if (el) el.value = map[id] || ''; });
 }
 
 async function saveSiteSettings() {
-const data = { site_name: document.getElementById('set_site_name').value, site_tagline: document.getElementById('set_site_tagline').value, logo_url: document.getElementById('set_logo_url').value, hero_title: document.getElementById('set_hero_title').value, hero_subtitle: document.getElementById('set_hero_subtitle').value, about_text: document.getElementById('set_about_text').value, contact_phone: document.getElementById('set_contact_phone').value, contact_email: document.getElementById('set_contact_email').value, contact_address: document.getElementById('set_contact_address').value, whatsapp_number: document.getElementById('set_whatsapp_number').value, facebook_url: document.getElementById('set_facebook_url').value, instagram_url: document.getElementById('set_instagram_url').value, linkedin_url: document.getElementById('set_linkedin_url').value, youtube_url: document.getElementById('set_youtube_url').value, telegram_bot_token: document.getElementById('set_telegram_bot_token').value, telegram_chat_id: document.getElementById('set_telegram_chat_id').value, membership_fee_bkash: document.getElementById('set_membership_fee_bkash').value, membership_fee_nagad: document.getElementById('set_membership_fee_nagad').value, updated_at: new Date().toISOString() };
-const res = await apiFetch('site_settings', { method: 'PATCH', query: '?id=eq.1', body: data });
-if (res.ok) { document.getElementById('settingsSuccess').style.display = 'block'; setTimeout(() => document.getElementById('settingsSuccess').style.display = 'none', 3000); }
-else alert('Save failed.');
+    requireLogin();
+    const data = { site_name: document.getElementById('set_site_name').value, site_tagline: document.getElementById('set_site_tagline').value, logo_url: document.getElementById('set_logo_url').value, hero_title: document.getElementById('set_hero_title').value, hero_subtitle: document.getElementById('set_hero_subtitle').value, about_text: document.getElementById('set_about_text').value, contact_phone: document.getElementById('set_contact_phone').value, contact_email: document.getElementById('set_contact_email').value, contact_address: document.getElementById('set_contact_address').value, whatsapp_number: document.getElementById('set_whatsapp_number').value, facebook_url: document.getElementById('set_facebook_url').value, instagram_url: document.getElementById('set_instagram_url').value, linkedin_url: document.getElementById('set_linkedin_url').value, youtube_url: document.getElementById('set_youtube_url').value, telegram_bot_token: document.getElementById('set_telegram_bot_token').value, telegram_chat_id: document.getElementById('set_telegram_chat_id').value, membership_fee_bkash: document.getElementById('set_membership_fee_bkash').value, membership_fee_nagad: document.getElementById('set_membership_fee_nagad').value, updated_at: new Date().toISOString() };
+    const res = await apiFetch('site_settings', { method: 'PATCH', query: '?id=eq.1', body: data });
+    if (res.ok) { document.getElementById('settingsSuccess').style.display = 'block'; setTimeout(() => document.getElementById('settingsSuccess').style.display = 'none', 3000); }
+    else alert('Save failed.');
 }
 
 function openModal(type, isEdit = false, id = null, data = {}) {
-currentItemId = id;
-const form = document.getElementById('modalForm');
-form.dataset.type = type;
-form.dataset.isEdit = isEdit;
-const fields = document.getElementById('modalFields');
+    requireLogin();
+    currentItemId = id;
+    const form = document.getElementById('modalForm');
+    form.dataset.type = type;
+    form.dataset.isEdit = isEdit;
+    const fields = document.getElementById('modalFields');
 
-if (type === 'chef') {
-document.getElementById('modalTitle').innerText = isEdit ? 'Edit Chef' : 'Add Chef';
-fields.innerHTML = `
-<div class="form-group"><label>Name *</label><input type="text" name="name" value="${data.name || ''}" required></div>
-<div class="form-group"><label>Specialty</label><input type="text" name="specialty" value="${data.specialty || ''}"></div>
-<div class="form-group"><label>Workplace</label><input type="text" name="workplace" value="${data.workplace || ''}"></div>
-<div class="form-group"><label>Experience</label><input type="text" name="experience" value="${data.experience || ''}"></div>
-<div class="form-group"><label>Image</label><input type="file" accept="image/*" onchange="handleUpload(event, 'image')"><div id="preview-container"></div><input type="hidden" name="image_url" id="image_url" value="${data.image_url || ''}"></div>`;
-} else if (type === 'job') {
-document.getElementById('modalTitle').innerText = isEdit ? 'Edit Job' : 'Post Job';
-fields.innerHTML = `
-<div class="form-group"><label>Title *</label><input type="text" name="title" value="${data.title || ''}" required></div>
-<div class="form-group"><label>Company</label><input type="text" name="company" value="${data.company || ''}"></div>
-<div class="form-group"><label>Location</label><input type="text" name="location" value="${data.location || ''}"></div>
-<div class="form-group"><label>Type</label><select name="type"><option ${data.type === 'Full Time' ? 'selected' : ''}>Full Time</option><option ${data.type === 'Part Time' ? 'selected' : ''}>Part Time</option><option ${data.type === 'Contract' ? 'selected' : ''}>Contract</option><option ${data.type === 'Abroad' ? 'selected' : ''}>Abroad</option></select></div>
-<div class="form-group"><label>Salary</label><input type="text" name="salary" value="${data.salary || ''}"></div>`;
-} else if (type === 'gallery') {
-document.getElementById('modalTitle').innerText = 'Upload Media';
-fields.innerHTML = `
-<div class="form-group"><label>Title *</label><input type="text" name="title" required></div>
-<div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
-<div class="form-group"><label>Media Type</label><select id="mediaType" onchange="toggleMedia()"><option value="image">Image</option><option value="video">Video</option></select></div>
-<div class="form-group"><label>File *</label><input type="file" id="mediaFile" accept="image/*" onchange="handleUpload(event, 'gallery')"><div id="preview-container"></div><input type="hidden" name="media_url" id="media_url" required><input type="hidden" name="media_type" id="media_type" value="image"></div>`;
-} else if (type === 'learning') {
-document.getElementById('modalTitle').innerText = 'Add Learning Content';
-fields.innerHTML = `
-<div class="form-group"><label>Type</label><select id="learnType" onchange="toggleLearnFields()"><option value="recipe">Recipe</option><option value="training">Training</option></select></div>
-<div class="form-group"><label>Title *</label><input type="text" name="title" required></div>
-<div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
-<div id="recipeFields"><div class="form-group"><label>Video Embed URL</label><input type="text" name="video_url" placeholder="https://www.youtube.com/embed/..."></div></div>
-<div id="trainingFields" style="display:none;">
-<div class="form-group"><label>Date</label><input type="text" name="date" placeholder="2024-12-15"></div>
-<div class="form-group"><label>Location</label><input type="text" name="location" placeholder="Dhaka"></div>
-</div>`;
-toggleLearnFields();
-} else if (type === 'certificate') {
-document.getElementById('modalTitle').innerText = 'Issue Certificate';
-fields.innerHTML = `
-<div class="form-group"><label>Member ID *</label><input type="text" name="member_id" placeholder="BPCAB-12345" required></div>
-<div class="form-group"><label>Member Name *</label><input type="text" name="member_name" required></div>
-<div class="form-group"><label>Course Name *</label><input type="text" name="course_name" placeholder="Advanced Pastry Masterclass" required></div>
-<div class="form-group"><label>Issue Date</label><input type="date" name="issue_date"></div>
-<div class="form-group"><label>Certificate Code *</label><input type="text" name="certificate_code" placeholder="CERT-2024-XXXX" required></div>`;
-}
-document.getElementById('dataModal').classList.add('active');
+    if (type === 'chef') {
+        document.getElementById('modalTitle').innerText = isEdit ? 'Edit Chef' : 'Add Chef';
+        fields.innerHTML = `
+        <div class="form-group"><label>Name *</label><input type="text" name="name" value="${data.name || ''}" required></div>
+        <div class="form-group"><label>Specialty</label><input type="text" name="specialty" value="${data.specialty || ''}"></div>
+        <div class="form-group"><label>Workplace</label><input type="text" name="workplace" value="${data.workplace || ''}"></div>
+        <div class="form-group"><label>Experience</label><input type="text" name="experience" value="${data.experience || ''}"></div>
+        <div class="form-group"><label>Image</label><input type="file" accept="image/*" onchange="handleUpload(event, 'image')"><div id="preview-container"></div><input type="hidden" name="image_url" id="image_url" value="${data.image_url || ''}"></div>`;
+    } else if (type === 'job') {
+        document.getElementById('modalTitle').innerText = isEdit ? 'Edit Job' : 'Post Job';
+        fields.innerHTML = `
+        <div class="form-group"><label>Title *</label><input type="text" name="title" value="${data.title || ''}" required></div>
+        <div class="form-group"><label>Company</label><input type="text" name="company" value="${data.company || ''}"></div>
+        <div class="form-group"><label>Location</label><input type="text" name="location" value="${data.location || ''}"></div>
+        <div class="form-group"><label>Type</label><select name="type"><option ${data.type === 'Full Time' ? 'selected' : ''}>Full Time</option><option ${data.type === 'Part Time' ? 'selected' : ''}>Part Time</option><option ${data.type === 'Contract' ? 'selected' : ''}>Contract</option><option ${data.type === 'Abroad' ? 'selected' : ''}>Abroad</option></select></div>
+        <div class="form-group"><label>Salary</label><input type="text" name="salary" value="${data.salary || ''}"></div>`;
+    } else if (type === 'gallery') {
+        document.getElementById('modalTitle').innerText = 'Upload Media';
+        fields.innerHTML = `
+        <div class="form-group"><label>Title *</label><input type="text" name="title" required></div>
+        <div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
+        <div class="form-group"><label>Media Type</label><select id="mediaType" onchange="toggleMedia()"><option value="image">Image</option><option value="video">Video</option></select></div>
+        <div class="form-group"><label>File *</label><input type="file" id="mediaFile" accept="image/*" onchange="handleUpload(event, 'gallery')"><div id="preview-container"></div><input type="hidden" name="media_url" id="media_url" required><input type="hidden" name="media_type" id="media_type" value="image"></div>`;
+    } else if (type === 'learning') {
+        document.getElementById('modalTitle').innerText = 'Add Learning Content';
+        fields.innerHTML = `
+        <div class="form-group"><label>Type</label><select id="learnType" onchange="toggleLearnFields()"><option value="recipe">Recipe</option><option value="training">Training</option></select></div>
+        <div class="form-group"><label>Title *</label><input type="text" name="title" required></div>
+        <div class="form-group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
+        <div id="recipeFields"><div class="form-group"><label>Video Embed URL</label><input type="text" name="video_url" placeholder="https://www.youtube.com/embed/..."></div></div>
+        <div id="trainingFields" style="display:none;">
+            <div class="form-group"><label>Date</label><input type="text" name="date" placeholder="2024-12-15"></div>
+            <div class="form-group"><label>Location</label><input type="text" name="location" placeholder="Dhaka"></div>
+        </div>`;
+        toggleLearnFields();
+    } else if (type === 'certificate') {
+        document.getElementById('modalTitle').innerText = 'Issue Certificate';
+        fields.innerHTML = `
+        <div class="form-group"><label>Member ID *</label><input type="text" name="member_id" placeholder="BPCAB-12345" required></div>
+        <div class="form-group"><label>Member Name *</label><input type="text" name="member_name" required></div>
+        <div class="form-group"><label>Course Name *</label><input type="text" name="course_name" placeholder="Advanced Pastry Masterclass" required></div>
+        <div class="form-group"><label>Issue Date</label><input type="date" name="issue_date"></div>
+        <div class="form-group"><label>Certificate Code *</label><input type="text" name="certificate_code" placeholder="CERT-2024-XXXX" required></div>`;
+    }
+    document.getElementById('dataModal').classList.add('active');
 }
 
 function toggleMedia() {
-const type = document.getElementById('mediaType').value;
-document.getElementById('media_type').value = type;
-document.getElementById('mediaFile').accept = type === 'video' ? 'video/*' : 'image/*';
+    const type = document.getElementById('mediaType').value;
+    document.getElementById('media_type').value = type;
+    document.getElementById('mediaFile').accept = type === 'video' ? 'video/*' : 'image/*';
 }
 
 function toggleLearnFields() {
-const type = document.getElementById('learnType').value;
-document.getElementById('recipeFields').style.display = type === 'recipe' ? 'block' : 'none';
-document.getElementById('trainingFields').style.display = type === 'training' ? 'block' : 'none';
+    const type = document.getElementById('learnType').value;
+    document.getElementById('recipeFields').style.display = type === 'recipe' ? 'block' : 'none';
+    document.getElementById('trainingFields').style.display = type === 'training' ? 'block' : 'none';
 }
 
 async function uploadFile(file) {
-const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-const res = await fetch(`${SUPABASE_URL}/storage/v1/object/media/${fileName}`, {
-method: 'POST',
-headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-body: file
-});
-if (!res.ok) throw new Error('Upload failed');
-return `${SUPABASE_URL}/storage/v1/object/public/media/${fileName}`;
+    requireLogin();
+    const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/media/${fileName}`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: file
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    return `${SUPABASE_URL}/storage/v1/object/public/media/${fileName}`;
 }
 
 async function handleUpload(event, ctx) {
-const file = event.target.files[0];
-if (!file) return;
-try {
-const url = await uploadFile(file);
-if (ctx === 'image') document.getElementById('image_url').value = url;
-else document.getElementById('media_url').value = url;
-document.getElementById('preview-container').innerHTML = `<img src="${url}" class="preview-img">`;
-} catch (e) { alert('Upload failed: ' + e.message); }
+    requireLogin();
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+        const url = await uploadFile(file);
+        if (ctx === 'image') document.getElementById('image_url').value = url;
+        else document.getElementById('media_url').value = url;
+        document.getElementById('preview-container').innerHTML = `<img src="${url}" class="preview-img">`;
+    } catch (e) { alert('Upload failed: ' + e.message); }
 }
 
 function closeModal() {
-document.getElementById('dataModal').classList.remove('active');
-document.getElementById('modalForm').reset();
+    document.getElementById('dataModal').classList.remove('active');
+    document.getElementById('modalForm').reset();
 }
 
 async function handleFormSubmit(e) {
-e.preventDefault();
-const form = e.target;
-const type = form.dataset.type;
-const isEdit = form.dataset.isEdit === 'true';
-const tableMap = { chef: 'chefs', job: 'jobs', gallery: 'gallery', learning: 'learning', certificate: 'certificates' };
-const table = tableMap[type];
-const data = Object.fromEntries(new FormData(form).entries());
-if (type === 'learning') data.type = document.getElementById('learnType').value;
-let res;
-if (isEdit) res = await apiFetch(table, { method: 'PATCH', query: `?id=eq.${currentItemId}`, body: data });
-else res = await apiFetch(table, { method: 'POST', body: data });
-if (res.ok) { closeModal(); loadData(table); }
-else alert('Operation failed.');
+    e.preventDefault();
+    requireLogin();
+    const form = e.target;
+    const type = form.dataset.type;
+    const isEdit = form.dataset.isEdit === 'true';
+    const tableMap = { chef: 'chefs', job: 'jobs', gallery: 'gallery', learning: 'learning', certificate: 'certificates' };
+    const table = tableMap[type];
+    const data = Object.fromEntries(new FormData(form).entries());
+    if (type === 'learning') data.type = document.getElementById('learnType').value;
+    let res;
+    if (isEdit) res = await apiFetch(table, { method: 'PATCH', query: `?id=eq.${currentItemId}`, body: data });
+    else res = await apiFetch(table, { method: 'POST', body: data });
+    if (res.ok) { closeModal(); loadData(table); }
+    else alert('Operation failed.');
 }
 
 function editItem(table, id, ...args) {
-if (table === 'chefs') openModal('chef', true, id, { name: args[0], specialty: args[1], workplace: args[2], experience: args[3], image_url: args[4] });
-else if (table === 'jobs') openModal('job', true, id, { title: args[0], company: args[1], location: args[2], type: args[3], salary: args[4] });
+    if (table === 'chefs') openModal('chef', true, id, { name: args[0], specialty: args[1], workplace: args[2], experience: args[3], image_url: args[4] });
+    else if (table === 'jobs') openModal('job', true, id, { title: args[0], company: args[1], location: args[2], type: args[3], salary: args[4] });
 }
 
 async function deleteItem(table, id) {
-if (!confirm('Delete this item?')) return;
-const res = await apiFetch(table, { method: 'DELETE', query: `?id=eq.${id}` });
-if (res.ok) {
-if (table === 'membership_applications') loadApplications();
-else loadData(table);
-}
-else alert('Delete failed.');
+    requireLogin();
+    if (!confirm('Delete this item?')) return;
+    const res = await apiFetch(table, { method: 'DELETE', query: `?id=eq.${id}` });
+    if (res.ok) {
+        if (table === 'membership_applications') loadApplications();
+        else loadData(table);
+    }
+    else alert('Delete failed.');
 }
 
 async function changePassword() {
-const current = document.getElementById('currentPass').value;
-const newPass = document.getElementById('newPass').value;
-const confirm = document.getElementById('confirmPass').value;
-const msg = document.getElementById('passMsg');
-msg.style.display = 'none';
-if (current !== getAdminPassword()) {
-msg.innerText = '❌ বর্তমান পাসওয়ার্ড ভুল।';
-msg.style.background = 'rgba(231,76,60,0.15)'; msg.style.color = '#e74c3c'; msg.style.display = 'block';
-return;
+    requireLogin();
+    const current = document.getElementById('currentPass').value;
+    const newPass = document.getElementById('newPass').value;
+    const confirm = document.getElementById('confirmPass').value;
+    const msg = document.getElementById('passMsg');
+    msg.style.display = 'none';
+    if (current !== getAdminPassword()) {
+        msg.innerText = '❌ বর্তমান পাসওয়ার্ড ভুল।';
+        msg.style.background = 'rgba(231,76,60,0.15)'; msg.style.color = '#e74c3c'; msg.style.display = 'block';
+        return;
+    }
+    if (newPass.length < 6) {
+        msg.innerText = '❌ নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।';
+        msg.style.background = 'rgba(231,76,60,0.15)'; msg.style.color = '#e74c3c'; msg.style.display = 'block';
+        return;
+    }
+    if (newPass !== confirm) {
+        msg.innerText = '❌ নতুন পাসওয়ার্ড দুটি মিলছে না।';
+        msg.style.background = 'rgba(231,76,60,0.15)'; msg.style.color = '#e74c3c'; msg.style.display = 'block';
+        return;
+    }
+    localStorage.setItem('bpcab_admin_password', newPass);
+    msg.innerText = '✅ পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!';
+    msg.style.background = 'rgba(46,204,113,0.15)'; msg.style.color = '#2ecc71'; msg.style.display = 'block';
+    document.getElementById('currentPass').value = '';
+    document.getElementById('newPass').value = '';
+    document.getElementById('confirmPass').value = '';
+    setTimeout(() => { msg.style.display = 'none'; }, 5000);
 }
-if (newPass.length < 6) {
-msg.innerText = '❌ নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।';
-msg.style.background = 'rgba(231,76,60,0.15)'; msg.style.color = '#e74c3c'; msg.style.display = 'block';
-return;
-}
-if (newPass !== confirm) {
-msg.innerText = '❌ নতুন পাসওয়ার্ড দুটি মিলছে না।';
-msg.style.background = 'rgba(231,76,60,0.15)'; msg.style.color = '#e74c3c'; msg.style.display = 'block';
-return;
-}
-localStorage.setItem('bpcab_admin_password', newPass);
-msg.innerText = '✅ পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!';
-msg.style.background = 'rgba(46,204,113,0.15)'; msg.style.color = '#2ecc71'; msg.style.display = 'block';
-document.getElementById('currentPass').value = '';
-document.getElementById('newPass').value = '';
-document.getElementById('confirmPass').value = '';
-setTimeout(() => { msg.style.display = 'none'; }, 5000);
-}
+
+// ============ INITIAL SECURITY CHECK ============
+(function checkAuthOnLoad() {
+    if (!isAdminLoggedIn()) {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mobileToggleBtn').style.display = 'none';
+    } else {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+        if (window.innerWidth <= 768) {
+            document.getElementById('mobileToggleBtn').style.display = 'flex';
+        }
+        loadOverview();
+        loadSiteSettings();
+    }
+})();
 
 document.getElementById('dataModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 document.getElementById('photoModal').addEventListener('click', function(e) { if (e.target === this) closePhotoModal(); });
